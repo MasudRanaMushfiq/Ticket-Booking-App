@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "TicketFinal",
+    "name": "Ticket Booking",
     "slug": "TicketFinal",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.masudranamushfiq.TicketFinal"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3a2b4709-e09c-435f-b1bb-04655e121702"
+      }
     }
   }
 }
