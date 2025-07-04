@@ -122,10 +122,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1e293b',
     textAlign: 'center',
-    marginTop: 30,
-    marginBottom: 10,
+    marginTop: 70,
+    marginBottom: 15,
   },
   list: {
+    marginHorizontal: 12,
     paddingHorizontal: 16,
     paddingBottom: 16,
   },

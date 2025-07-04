@@ -155,24 +155,25 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#effbfb',
+    backgroundColor: '#ececec',
     paddingHorizontal: 20,
     paddingTop: 30,
   },
   cardSection: {
-    padding: 15,
+    padding: 10,
     marginBottom: 25,
+    marginHorizontal: -5,
+    marginTop: 30,
   },
   profileSection: {
-    borderWidth: 1,
-    borderColor: '#6b6b6c',
+    backgroundColor: '#fff',
     marginHorizontal: 5,
     marginVertical: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'flex-start',
     paddingLeft: 10,
     paddingBottom: 40,
-    paddingTop: 10,
+    paddingTop: 15,
   },
   avatar: {
     marginBottom: 8,
@@ -210,12 +211,16 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     marginTop: 5,
-    marginLeft: 10,
+    marginHorizontal: 6,
   },
   buttonRow: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 15, 
   },
   buttonText: {
     fontSize: 16,

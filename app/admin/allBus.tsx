@@ -59,24 +59,27 @@ export default function AllBusScreen() {
           <Text style={styles.info}>Date: {item.date.toDate().toDateString()}</Text>
           <Text style={styles.info}>Price: ৳{item.price}</Text>
           <Text style={styles.info}>Seats: {item.totalSeats} total</Text>
-          <Text style={styles.booked}>Booked: {item.bookedSeats}</Text>
-        </View>
 
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() =>
-            Alert.alert(
-              'Confirm Delete',
-              'Are you sure you want to delete this bus?',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', onPress: () => handleDelete(item.id), style: 'destructive' },
-              ]
-            )
-          }
-        >
-          <Text style={styles.deleteText}>🗑 Delete</Text>
-        </TouchableOpacity>
+          {/* Booked & Delete Inline */}
+          <View style={styles.rowBetween}>
+            <Text style={styles.booked}>Booked: {item.bookedSeats}</Text>
+            <TouchableOpacity
+              style={styles.deleteButtonInline}
+              onPress={() =>
+                Alert.alert(
+                  'Confirm Delete',
+                  'Are you sure you want to delete this bus?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Delete', onPress: () => handleDelete(item.id), style: 'destructive' },
+                  ]
+                )
+              }
+            >
+              <Text style={styles.deleteText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     );
   };
@@ -132,8 +135,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '600',
-    marginBottom: 15,
-    marginTop: 15,
+    marginBottom: 10,
+    marginTop: 40,
     textAlign: 'center',
     color: '#1e293b',
   },
@@ -144,6 +147,8 @@ const styles = StyleSheet.create({
     marginTop: 50,
   },
   busCard: {
+    marginHorizontal: 10,
+    marginVertical: 8,
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 12,
@@ -161,21 +166,21 @@ const styles = StyleSheet.create({
   booked: {
     fontSize: 14,
     color: '#475569',
-    marginTop: 4,
   },
-  deleteButton: {
-    marginTop: 10,
-    alignSelf: 'flex-end',
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  deleteButtonInline: {
     backgroundColor: '#ef4444',
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   deleteText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '900',
   },
 });
-
-
-

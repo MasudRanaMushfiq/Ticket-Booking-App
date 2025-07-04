@@ -301,12 +301,12 @@ const styles = StyleSheet.create({
   imageSection: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 80,
     marginBottom: 20,
   },
   image: {
     width: '80%',
-    height: 150,
+    height: 180,
   },
   swapRow: {
     marginBottom: 5,

@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -26,13 +27,14 @@ export default function ConfirmScreen() {
   const { from, to, date, seatLabel, price, busId } = params;
 
   const [userName, setUserName] = useState('Loading...');
+  const [transactionId, setTransactionId] = useState('');
   const user = auth.currentUser;
 
   useEffect(() => {
     if (user) {
-      setUserName(user.displayName || 'Guest');
+      setUserName(user.displayName || 'You');
     } else {
-      setUserName('Guest');
+      setUserName('You');
     }
   }, [user]);
 
@@ -47,6 +49,10 @@ export default function ConfirmScreen() {
         Alert.alert('Error', 'Seat is missing or invalid.');
         return;
       }
+      if (!transactionId.trim()) {
+        Alert.alert('Error', 'Please enter a valid transaction ID.');
+        return;
+      }
 
       const bookingData = {
         from,
@@ -55,6 +61,7 @@ export default function ConfirmScreen() {
         seat: seatLabel,
         price: price ? Number(price) : 0,
         busId,
+        transactionId,
         createdAt: serverTimestamp(),
       };
 
@@ -106,7 +113,7 @@ export default function ConfirmScreen() {
 
         <View style={styles.infoRow}>
           <Text style={styles.label}>Passenger</Text>
-          <Text style={styles.value}>You</Text>
+          <Text style={styles.value}>{userName}</Text>
         </View>
 
         <View style={styles.infoRow}>
@@ -136,8 +143,17 @@ export default function ConfirmScreen() {
           <Text style={styles.value}>৳ {price}</Text>
         </View>
 
+        {/* 🔶 New Field for Transaction ID */}
+        <TextInput
+          placeholder="Enter Transaction ID"
+          style={styles.input}
+          value={transactionId}
+          onChangeText={setTransactionId}
+          placeholderTextColor="#9ca3af"
+        />
+
         <View style={styles.divider} />
-        <Text style={styles.thankYou}>Thank you for booking with Green Line!</Text>
+        <Text style={styles.thankYou}>Thank you for booking!</Text>
       </View>
 
       <TouchableOpacity style={styles.button} onPress={handleBackHome}>
@@ -158,7 +174,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 24,
-    marginHorizontal: 30,
+    marginHorizontal: 10,
     elevation: 5,
     shadowColor: '#000',
     shadowOpacity: 0.1,
@@ -178,7 +194,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     borderBottomColor: '#e2e8f0',
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
     marginVertical: 10,
   },
   infoRow: {
@@ -196,6 +212,15 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     fontWeight: '600',
   },
+  input: {
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
+    fontSize: 16,
+    color: '#1e293b',
+  },
   thankYou: {
     textAlign: 'center',
     fontSize: 16,
@@ -204,7 +229,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   button: {
-    marginHorizontal: 30,
+    marginHorizontal: 20,
     marginVertical: 30,
     backgroundColor: '#16A34A',
     paddingVertical: 16,
@@ -218,6 +243,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-
-
-

@@ -126,6 +126,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1e293b',
     marginVertical: 20,
+    marginLeft: 10,
+    marginTop: 50,
   },
   input: {
     height: 48,
@@ -134,13 +136,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     marginBottom: 12,
+    marginHorizontal: 10,
     backgroundColor: '#fff',
     justifyContent: 'center',
   },
   button: {
-    marginTop: 10,
+    marginTop: 20,
     backgroundColor: '#2563eb',
     paddingVertical: 14,
+    marginHorizontal: 10,
     borderRadius: 10,
     alignItems: 'center',
 

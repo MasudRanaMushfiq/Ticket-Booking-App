@@ -85,12 +85,15 @@ export default function AvailableBusScreen() {
     const isAvailable = item.totalSeats > bookedCount;
     const availableSeats = item.totalSeats - bookedCount;
 
+    const displayDate = item.date?.toDate?.().toDateString?.() ?? 'Unknown Date';
+
     return (
       <View style={styles.busRow}>
         <View style={styles.busInfo}>
           <Text style={styles.busName}>{item.busName}</Text>
+          <Text style={styles.date}>Date: {displayDate}</Text>
           <Text style={styles.departure}>Departure: {item.departureTime}</Text>
-          <Text style={styles.departure}>Price: ৳{item.price}</Text>
+          <Text style={styles.departure}>Price: ৳ {item.price}</Text>
         </View>
 
         {isAvailable ? (
@@ -174,8 +177,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 20,
-    fontWeight: '500',
+    fontSize: 18,
+    fontWeight: '600',
     marginBottom: 18,
     color: '#1e293b',
     textAlign: 'center',
@@ -232,6 +235,11 @@ const styles = StyleSheet.create({
   departure: {
     fontSize: 14,
     color: '#64748b',
+  },
+  date: {
+    fontSize: 14,
+    color: 'black',
+    fontWeight: '900',
   },
   seats: {
     fontSize: 16,
