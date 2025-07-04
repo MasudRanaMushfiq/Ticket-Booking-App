@@ -123,9 +123,9 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#1e293b',
-    marginBottom: 20,
+    marginVertical: 20,
   },
   input: {
     height: 48,
@@ -138,13 +138,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   button: {
+    marginTop: 10,
     backgroundColor: '#2563eb',
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 10,
-    elevation: 3,
-    shadowColor: '#000',
+
   },
   buttonText: {
     color: '#fff',

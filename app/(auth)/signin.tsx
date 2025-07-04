@@ -30,7 +30,7 @@ export default function SignInScreen() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       setError('');
-      router.replace({ pathname: '/home', params: { success: 'true' } });
+      router.replace({ pathname: '/home', params: { loggedIn: 'true' } });
     } catch (error: any) {
       setError(error.message);
     }

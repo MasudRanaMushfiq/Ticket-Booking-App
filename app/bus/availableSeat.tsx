@@ -77,7 +77,7 @@ export default function AvailableSeatScreen() {
       const seatLabel = seats.find((s) => s.id === selectedSeat)?.label ?? 'Unknown';
 
       router.push({
-        pathname: '/bus/confirm',
+        pathname: '/ticket/confirm',
         params: {
           from: bus?.from || '',
           to: bus?.to || '',
@@ -153,10 +153,6 @@ export default function AvailableSeatScreen() {
           </View>
         </View>
 
-        <View style={styles.legend}>
-          <Text style={styles.legendItem}>🟩 Available  🟢 Booked  🟦 Selected</Text>
-        </View>
-
         {selectedSeat !== null && (
           <View style={styles.confirmButtonWrapper}>
             <TouchableOpacity
@@ -165,7 +161,7 @@ export default function AvailableSeatScreen() {
               activeOpacity={0.8}
             >
               <Text style={styles.confirmButtonText}>
-                Confirm Seat{' '}
+                Confirm Seat{'  '}
                 <Text style={styles.confirmSeatLabel}>
                   {seats.find((s) => s.id === selectedSeat)?.label}
                 </Text>
@@ -180,10 +176,10 @@ export default function AvailableSeatScreen() {
 
 const styles = StyleSheet.create({
   safeContainer: { flex: 1, backgroundColor: '#f8fafc' },
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, padding: 10 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#16A34A',
     textAlign: 'center',
@@ -192,20 +188,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#475569',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 5,
   },
   busContainer: {
     backgroundColor: '#e0f2fe',
-    borderRadius: 40,
+    borderRadius: 30,
     borderWidth: 2,
     borderColor: '#94a3b8',
-    marginBottom: 30,
-    minHeight: 300,
+    marginBottom: 10,
+    minHeight: 100,
     justifyContent: 'center',
+    marginHorizontal: 40,
+
   },
   busBody: {
-    paddingVertical: 20,
-    paddingHorizontal: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     justifyContent: 'center',
   },
   grid: {
@@ -215,23 +213,14 @@ const styles = StyleSheet.create({
     margin: 6,
   },
   seat: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   available: {
     backgroundColor: '#16A34A',
-  },
-  booked: {
-    backgroundColor: '#bbf7d0',
-    borderWidth: 1,
-    borderColor: '#22c55e',
-    shadowColor: '#22c55e',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
   },
   selectedSeat: {
     backgroundColor: '#3B82F6',
@@ -240,40 +229,34 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-  legend: {
-    alignItems: 'center',
-  },
-  legendItem: {
-    fontSize: 14,
-    color: '#334155',
+  booked: {
+    backgroundColor: '#bbf7d0',
+    borderWidth: 2,
+    borderColor: '#16A34A',
+    color: 'red',
   },
   confirmButtonWrapper: {
     position: 'absolute',
-    bottom: 30,
-    left: 20,
-    right: 20,
+    bottom: 10,
+    left: 50,
+    right: 50,
     borderRadius: 30,
     overflow: 'hidden',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 5 },
   },
   confirmButton: {
     backgroundColor: '#16A34A',
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderRadius: 30,
     alignItems: 'center',
   },
   confirmButtonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   confirmSeatLabel: {
     color: '#facc15',
-    fontWeight: '900',
+    fontWeight: '700',
   },
 });
 

@@ -1,6 +1,29 @@
-import React, { useState, useRef } from 'react'; import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform, KeyboardAvoidingView, FlatList, Keyboard, Dimensions } from 'react-native'; import DateTimePicker from '@react-native-community/datetimepicker'; import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Platform,
+  KeyboardAvoidingView,
+  FlatList,
+  Keyboard,
+} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
-const divisions = [ 'Dhaka', 'Chattogram', 'Rajshahi', 'Khulna', 'Barishal', 'Sylhet', 'Rangpur', 'Mymensingh', ];
+const divisions = [
+  'Dhaka',
+  'Chattogram',
+  'Rajshahi',
+  'Khulna',
+  'Barishal',
+  'Sylhet',
+  'Rangpur',
+  'Mymensingh',
+];
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -11,15 +34,21 @@ export default function HomeScreen() {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showSuccessMsg, setShowSuccessMsg] = useState(false);
-  const [fromSuggestions, setFromSuggestions] = useState([]);
-  const [toSuggestions, setToSuggestions] = useState([]);
+  const [fromSuggestions, setFromSuggestions] = useState<string[]>([]);
+  const [toSuggestions, setToSuggestions] = useState<string[]>([]);
   const [activeInput, setActiveInput] = useState<'from' | 'to' | null>(null);
 
-  const screenHeight = Dimensions.get('window').height;
+  useEffect(() => {
+    if (params.loggedIn === 'true') {
+      setShowSuccessMsg(true);
+      const timer = setTimeout(() => {
+        setShowSuccessMsg(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [params.loggedIn]);
 
-  
-
-  const onChangeDate = (event, selectedDate) => {
+  const onChangeDate = (event: any, selectedDate: Date | undefined) => {
     setShowDatePicker(false);
     if (selectedDate) setDate(selectedDate);
   };
@@ -29,6 +58,7 @@ export default function HomeScreen() {
       alert("'From' and 'To' cannot be the same.");
       return;
     }
+
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
 
@@ -42,39 +72,47 @@ export default function HomeScreen() {
     });
   };
 
-  const handleFromChange = (text) => {
+  const handleFromChange = (text: string) => {
     setFrom(text);
-    const filtered = divisions.filter((item) => item.toLowerCase().startsWith(text.toLowerCase()) && item !== to);
+    const filtered = divisions.filter(
+      (item) =>
+        item.toLowerCase().startsWith(text.toLowerCase()) && item !== to
+    );
     setFromSuggestions(text ? filtered : divisions.filter((d) => d !== to));
   };
 
-  const handleToChange = (text) => {
+  const handleToChange = (text: string) => {
     setTo(text);
-    const filtered = divisions.filter((item) => item.toLowerCase().startsWith(text.toLowerCase()) && item !== from);
+    const filtered = divisions.filter(
+      (item) =>
+        item.toLowerCase().startsWith(text.toLowerCase()) && item !== from
+    );
     setToSuggestions(text ? filtered : divisions.filter((d) => d !== from));
+  };
+
+  const swapFromTo = () => {
+    setFrom(to);
+    setTo(from);
+    setFromSuggestions([]);
+    setToSuggestions([]);
+    Keyboard.dismiss();
   };
 
   const Wrapper = Platform.OS === 'ios' ? KeyboardAvoidingView : View;
 
   return (
     <Wrapper style={styles.container} behavior="padding">
-      {showSuccessMsg && (
-        <Text style={styles.successMessage}>You have successfully logged in.</Text>
-      )}
-
-      <View style={styles.buttonsRow}>
-        <TouchableOpacity style={[styles.buttonHalf, styles.addBusButton]} onPress={() => router.push('/bus/addBus')}>
-          <Text style={styles.buttonText}>➕ Add Bus</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.buttonHalf, styles.viewAllButton]} onPress={() => router.push('/bus/allBus')}>
-          <Text style={styles.buttonText}>View All Buses</Text>
-        </TouchableOpacity>
+      <View style={styles.messageContainer}>
+        <Text style={[styles.successMessage, { opacity: showSuccessMsg ? 1 : 0 }]}>
+          ✅ You have successfully logged in.
+        </Text>
       </View>
 
       <View style={styles.topSection}>
         <Text style={styles.title}>Search</Text>
 
-        <View style={{ zIndex: 2 }}>
+        {/* From input */}
+        <View style={{ zIndex: 4 }}>
           <TextInput
             style={styles.input}
             placeholder="From"
@@ -89,7 +127,13 @@ export default function HomeScreen() {
               style={styles.suggestionBox}
               keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => { setFrom(item); setFromSuggestions([]); Keyboard.dismiss(); }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setFrom(item);
+                    setFromSuggestions([]);
+                    Keyboard.dismiss();
+                  }}
+                >
                   <Text style={styles.suggestionItem}>{item}</Text>
                 </TouchableOpacity>
               )}
@@ -97,7 +141,15 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <View style={{ zIndex: 1 }}>
+        {/* Swap icon centered in full row */}
+        <View style={styles.swapRow}>
+          <TouchableOpacity onPress={swapFromTo} activeOpacity={0.7}>
+            <Text style={styles.swapIcon}>🔄</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* To input */}
+        <View style={{ zIndex: 2 }}>
           <TextInput
             style={styles.input}
             placeholder="To"
@@ -112,7 +164,13 @@ export default function HomeScreen() {
               style={styles.suggestionBox}
               keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => (
-                <TouchableOpacity onPress={() => { setTo(item); setToSuggestions([]); Keyboard.dismiss(); }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setTo(item);
+                    setToSuggestions([]);
+                    Keyboard.dismiss();
+                  }}
+                >
                   <Text style={styles.suggestionItem}>{item}</Text>
                 </TouchableOpacity>
               )}
@@ -120,7 +178,10 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <TouchableOpacity style={[styles.input, styles.dateInput]} onPress={() => setShowDatePicker(true)}>
+        <TouchableOpacity
+          style={[styles.input, styles.dateInput]}
+          onPress={() => setShowDatePicker(true)}
+        >
           <Text style={{ color: '#475569' }}>{date.toDateString()}</Text>
         </TouchableOpacity>
 
@@ -141,7 +202,9 @@ export default function HomeScreen() {
 
       <View style={styles.imageSection}>
         <Image
-          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/854/854894.png' }}
+          source={{
+            uri: 'https://cdn-icons-png.flaticon.com/512/854/854894.png',
+          }}
           style={styles.image}
           resizeMode="contain"
         />
@@ -151,42 +214,72 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc', paddingHorizontal: 24, paddingTop: 50 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f6f6f6',
+    paddingHorizontal: 24,
+    paddingTop: 50,
+  },
+  messageContainer: {
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   successMessage: {
     backgroundColor: '#dcfce7',
     color: '#15803d',
     textAlign: 'center',
-    padding: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     borderRadius: 8,
     fontSize: 14,
+    position: 'absolute',
+    top: 0,
+    left: 24,
+    right: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  topSection: {
+    zIndex: 0,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#1e293b',
     marginBottom: 10,
   },
-  buttonsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
-  buttonHalf: { flex: 0.48, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
-  addBusButton: { backgroundColor: '#3B82F6' },
-  viewAllButton: { backgroundColor: '#16A34A' },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
-  topSection: { zIndex: 0 },
-  title: { fontSize: 26, fontWeight: 'bold', color: '#1e293b', marginBottom: 20 },
   input: {
     height: 48,
     borderColor: '#cbd5e1',
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 15,
-    marginBottom: 12,
     backgroundColor: '#fff',
     justifyContent: 'center',
   },
-  dateInput: { paddingVertical: 12 },
+  dateInput: {
+    paddingVertical: 12,
+    marginTop: 10,
+    marginBottom: 10,
+  },
   button: {
     backgroundColor: '#2563eb',
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 20,
     elevation: 3,
     shadowColor: '#000',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
   },
   suggestionBox: {
     position: 'absolute',
@@ -205,6 +298,23 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  imageSection: { justifyContent: 'center', alignItems: 'center', marginTop: 40, marginBottom: 20 },
-  image: { width: '80%', height: 180 },
+  imageSection: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  image: {
+    width: '80%',
+    height: 150,
+  },
+  swapRow: {
+    marginBottom: 5,
+    alignItems: 'center',
+    width: '100%',
+  },
+  swapIcon: {
+    fontSize: 32,
+    color: '#2563eb',
+  },
 });

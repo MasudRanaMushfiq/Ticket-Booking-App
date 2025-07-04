@@ -58,7 +58,8 @@ export default function AllBusScreen() {
           <Text style={styles.info}>Departure: {item.departureTime}</Text>
           <Text style={styles.info}>Date: {item.date.toDate().toDateString()}</Text>
           <Text style={styles.info}>Price: ৳{item.price}</Text>
-          <Text style={styles.info}>Seats: {item.totalSeats} total, {item.bookedSeats} booked</Text>
+          <Text style={styles.info}>Seats: {item.totalSeats} total</Text>
+          <Text style={styles.booked}>Booked: {item.bookedSeats}</Text>
         </View>
 
         <TouchableOpacity
@@ -111,7 +112,7 @@ export default function AllBusScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ecebeb',
     padding: 20,
   },
   center: {
@@ -130,8 +131,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 15,
+    marginTop: 15,
+    textAlign: 'center',
     color: '#1e293b',
   },
   noBus: {
@@ -144,18 +147,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 2 },
   },
   busName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#334155',
+    color: '#037679',
   },
   info: {
+    fontSize: 14,
+    color: '#475569',
+    marginTop: 4,
+  },
+  booked: {
     fontSize: 14,
     color: '#475569',
     marginTop: 4,

@@ -106,7 +106,7 @@ export default function ConfirmScreen() {
 
         <View style={styles.infoRow}>
           <Text style={styles.label}>Passenger</Text>
-          <Text style={styles.value}>{userName}</Text>
+          <Text style={styles.value}>You</Text>
         </View>
 
         <View style={styles.infoRow}>
@@ -150,7 +150,7 @@ export default function ConfirmScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ededed',
     padding: 24,
     justifyContent: 'center',
   },
@@ -158,6 +158,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 24,
+    marginHorizontal: 30,
     elevation: 5,
     shadowColor: '#000',
     shadowOpacity: 0.1,
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
   divider: {
     borderBottomColor: '#e2e8f0',
     borderBottomWidth: 1,
-    marginVertical: 18,
+    marginVertical: 10,
   },
   infoRow: {
     flexDirection: 'row',
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 18,
     color: '#1e293b',
-    fontWeight: '700',
+    fontWeight: '600',
   },
   thankYou: {
     textAlign: 'center',
@@ -203,10 +204,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   button: {
-    marginTop: 40,
+    marginHorizontal: 30,
+    marginVertical: 30,
     backgroundColor: '#16A34A',
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 15,
     alignItems: 'center',
     elevation: 3,
   },

@@ -1,18 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  Image,
   StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   SafeAreaView,
+  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '@/firebaseConfig';
 import { useRouter } from 'expo-router';
-import { collection, doc, getDoc, getDocs, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, Timestamp } from 'firebase/firestore';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 interface UserData {
   fullName: string;
@@ -20,30 +19,24 @@ interface UserData {
   createdAt: Timestamp;
 }
 
-interface Booking {
-  id: string;
-  from: string;
-  to: string;
-  seat: string;
-  date: Timestamp;
-  price: number;
-  busId: string;
-}
+const ADMIN_UID = '9IXmZvX1ZyR1zgdcczjb6fiJxyx2';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [userInfo, setUserInfo] = useState<UserData | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [userInfo, setUserInfo] = React.useState<UserData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [errorMsg, setErrorMsg] = React.useState('');
+  const [currentUid, setCurrentUid] = React.useState<string | null>(null); // ✅ Track UID
 
-  useEffect(() => {
-    const fetchData = async () => {
+  React.useEffect(() => {
+    const fetchUser = async () => {
       const user = auth.currentUser;
       if (!user) {
         router.replace('/signin');
         return;
       }
+
+      setCurrentUid(user.uid); // ✅ Store current UID
 
       try {
         const userRef = doc(db, 'users', user.uid);
@@ -53,23 +46,13 @@ export default function ProfileScreen() {
         } else {
           setErrorMsg('User data not found.');
         }
-
-        const bookingSnapshot = await getDocs(collection(userRef, 'bookings'));
-        const userBookings: Booking[] = [];
-        bookingSnapshot.forEach((doc) => {
-          userBookings.push({ id: doc.id, ...doc.data() } as Booking);
-        });
-
-        setBookings(userBookings);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error) {
-        setErrorMsg('Failed to load profile or bookings.');
+      } catch {
+        setErrorMsg('Failed to load user data.');
       }
-
       setLoading(false);
     };
 
-    fetchData();
+    fetchUser();
   }, [router]);
 
   const handleLogout = async () => {
@@ -79,6 +62,10 @@ export default function ProfileScreen() {
     } catch {
       setErrorMsg('Failed to logout.');
     }
+  };
+
+  const handleEdit = () => {
+    router.push('/profile/editProfile');
   };
 
   if (loading) {
@@ -95,132 +82,146 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {errorMsg ? (
-          <Text style={styles.errorText}>{errorMsg}</Text>
-        ) : (
-          <>
-            <View style={styles.profileContainer}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => router.push('/profile/editProfile')}
-              >
-                <Text style={styles.editButtonText}>Edit</Text>
-              </TouchableOpacity>
-
-              <Image
-                source={{ uri: 'https://randomuser.me/api/portraits/men/4.jpg' }}
-                style={styles.profileImage}
+      {errorMsg ? (
+        <Text style={styles.errorText}>{errorMsg}</Text>
+      ) : (
+        <>
+          {/* Profile Card Section */}
+          <View style={styles.cardSection}>
+            <View style={styles.profileSection}>
+              <Ionicons
+                name="person-circle"
+                size={110}
+                color="#10B981"
+                style={styles.avatar}
               />
-              <Text style={styles.name}>{userInfo?.fullName || 'Unnamed User'}</Text>
-              <Text style={styles.info}>{userInfo?.email}</Text>
-              <Text style={styles.info}>
+              <Text style={styles.name}>
+                {userInfo?.fullName || 'Unnamed User'}
+              </Text>
+              <Text style={styles.email}>{userInfo?.email}</Text>
+              <Text style={styles.joined}>
                 Joined:{' '}
                 {userInfo?.createdAt
-                  ? userInfo.createdAt.toDate().toISOString().slice(0, 10)
+                  ? userInfo.createdAt.toDate().toLocaleDateString()
                   : 'Unknown'}
               </Text>
-            </View>
 
-            <View style={styles.ticketsContainer}>
-              <Text style={styles.ticketsTitle}>Booked Tickets</Text>
-              {bookings.map((item) => (
-                <View key={item.id} style={styles.ticketRow}>
-                  <View>
-                    <Text style={styles.ticketRoute}>
-                      {item.from} → {item.to}
-                    </Text>
-                    <Text style={styles.ticketInfo}>Seat: {item.seat}</Text>
-                    <Text style={styles.ticketInfo}>
-                      Date: {item.date?.toDate().toDateString()}
-                    </Text>
-                    <Text style={styles.ticketInfo}>Price: ৳ {item.price}</Text>
-                  </View>
-                </View>
-              ))}
+              <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+                <Text style={styles.editButtonText}>Edit Profile</Text>
+              </TouchableOpacity>
             </View>
+          </View>
 
-            <TouchableOpacity style={styles.button} onPress={handleLogout}>
-              <Text style={styles.buttonText}>Logout</Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </ScrollView>
+          {/* Bottom Buttons Section */}
+          <View style={styles.cardSection}>
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity
+                style={styles.buttonRow}
+                onPress={() => router.push('/ticket/ticketHistory')}
+              >
+                <MaterialIcons name="history" size={26} color="#4b5563" />
+                <Text style={[styles.buttonText, { color: '#4b5563' }]}>
+                  Ticket History
+                </Text>
+              </TouchableOpacity>
+
+              {/* ✅ Admin Button - only for specific UID */}
+              {currentUid === ADMIN_UID && (
+                <TouchableOpacity
+                  style={styles.buttonRow}
+                  onPress={() => router.push('/admin')}
+                >
+                  <Ionicons name="settings-outline" size={26} color="#4b5563" />
+                  <Text style={[styles.buttonText, { color: '#4b5563' }]}>
+                    Admin Panel
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity style={styles.buttonRow} onPress={handleLogout}>
+                <Ionicons name="log-out-outline" size={26} color="#4b5563" />
+                <Text style={[styles.buttonText, { color: '#4b5563' }]}>
+                  Logout
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f5f5f0' },
-  scrollContainer: { padding: 30, paddingBottom: 100 },
-  profileContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    alignItems: 'center',
-    paddingVertical: 30,
-    marginBottom: 20,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    position: 'relative',
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#effbfb',
+    paddingHorizontal: 20,
+    paddingTop: 30,
   },
-  editButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: '#2563eb',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 12,
-    elevation: 3,
+  cardSection: {
+    padding: 15,
+    marginBottom: 25,
   },
-  editButtonText: { color: '#fff', fontWeight: '600', fontSize: 17 },
-  profileImage: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    marginBottom: 18,
-    borderWidth: 2,
-    borderColor: '#16A34A',
+  profileSection: {
+    borderWidth: 1,
+    borderColor: '#6b6b6c',
+    marginHorizontal: 5,
+    marginVertical: 20,
+    borderRadius: 10,
+    alignItems: 'flex-start',
+    paddingLeft: 10,
+    paddingBottom: 40,
+    paddingTop: 10,
   },
-  name: { fontSize: 24, fontWeight: '700', color: '#1e293b', marginBottom: 6 },
-  info: { fontSize: 16, color: '#475569', marginBottom: 4 },
-  ticketsContainer: { marginBottom: 20 },
-  ticketsTitle: {
+  avatar: {
+    marginBottom: 8,
+  },
+  name: {
     fontSize: 22,
     fontWeight: '700',
     color: '#1e293b',
-    marginBottom: 15,
+    marginBottom: 2,
+    marginLeft: 5,
   },
-  ticketRow: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 6,
-    marginBottom: 10,
-    elevation: 3,
-    shadowColor: '#000',
-  },
-  ticketRoute: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#334155',
-    marginBottom: 4,
-  },
-  ticketInfo: {
-    fontSize: 14,
+  email: {
+    fontSize: 15,
     color: '#475569',
     marginBottom: 2,
+    marginLeft: 5,
   },
-  button: {
-    backgroundColor: '#EF4444',
-    paddingVertical: 14,
-    borderRadius: 12,
+  joined: {
+    fontSize: 13,
+    color: '#64748b',
+    marginLeft: 5,
+    marginBottom: 12,
+  },
+  editButton: {
+    backgroundColor: '#5c5c5c',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginLeft: 5,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '400',
+  },
+  buttonsContainer: {
+    marginTop: 5,
+    marginLeft: 10,
+  },
+  buttonRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    elevation: 3,
+    marginBottom: 20,
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
   errorText: {
     color: 'red',
     textAlign: 'center',

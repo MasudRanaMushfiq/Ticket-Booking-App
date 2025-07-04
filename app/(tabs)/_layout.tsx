@@ -9,7 +9,8 @@ export default function Layout() {
         tabBarActiveTintColor: '#2563eb',
         tabBarInactiveTintColor: '#64748b',
         tabBarStyle: {
-          paddingBottom: 5,
+          paddingBottom: 2,
+          paddingTop: 2,
           height: 60,
         },
         tabBarLabelStyle: {
