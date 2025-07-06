@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
+  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -26,7 +27,7 @@ export default function ProfileScreen() {
   const [userInfo, setUserInfo] = React.useState<UserData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [errorMsg, setErrorMsg] = React.useState('');
-  const [currentUid, setCurrentUid] = React.useState<string | null>(null); // ✅ Track UID
+  const [currentUid, setCurrentUid] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const fetchUser = async () => {
@@ -36,7 +37,7 @@ export default function ProfileScreen() {
         return;
       }
 
-      setCurrentUid(user.uid); // ✅ Store current UID
+      setCurrentUid(user.uid);
 
       try {
         const userRef = doc(db, 'users', user.uid);
@@ -65,7 +66,7 @@ export default function ProfileScreen() {
   };
 
   const handleEdit = () => {
-    router.push('/profile/editProfile');
+    router.push('/screen/editProfile');
   };
 
   if (loading) {
@@ -73,7 +74,7 @@ export default function ProfileScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ActivityIndicator
           size="large"
-          color="#10B981"
+          color="#3a125d"
           style={{ flex: 1, justifyContent: 'center' }}
         />
       </SafeAreaView>
@@ -82,17 +83,28 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Notification Button */}
+      <TouchableOpacity
+        style={styles.notificationIcon}
+        onPress={() => router.push('/(tabs)/home')}
+      >
+        <Ionicons name="notifications-outline" size={26} color="#3a125d" />
+      </TouchableOpacity>
+
       {errorMsg ? (
         <Text style={styles.errorText}>{errorMsg}</Text>
       ) : (
-        <>
+        <ScrollView
+          contentContainerStyle={styles.scrollContentContainer}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Profile Card Section */}
           <View style={styles.cardSection}>
             <View style={styles.profileSection}>
               <Ionicons
                 name="person-circle"
                 size={110}
-                color="#10B981"
+                color="#3a125d"
                 style={styles.avatar}
               />
               <Text style={styles.name}>
@@ -119,34 +131,31 @@ export default function ProfileScreen() {
                 style={styles.buttonRow}
                 onPress={() => router.push('/ticket/ticketHistory')}
               >
-                <MaterialIcons name="history" size={26} color="#4b5563" />
-                <Text style={[styles.buttonText, { color: '#4b5563' }]}>
-                  Ticket History
-                </Text>
+                <MaterialIcons name="history" size={26} color="#544d4d" />
+                <Text style={styles.buttonText}>Ticket History</Text>
               </TouchableOpacity>
 
-              {/* ✅ Admin Button - only for specific UID */}
               {currentUid === ADMIN_UID && (
                 <TouchableOpacity
                   style={styles.buttonRow}
                   onPress={() => router.push('/admin')}
                 >
-                  <Ionicons name="settings-outline" size={26} color="#4b5563" />
-                  <Text style={[styles.buttonText, { color: '#4b5563' }]}>
-                    Admin Panel
-                  </Text>
+                  <Ionicons
+                    name="settings-outline"
+                    size={26}
+                    color="#544d4d"
+                  />
+                  <Text style={styles.buttonText}>Admin Panel</Text>
                 </TouchableOpacity>
               )}
 
               <TouchableOpacity style={styles.buttonRow} onPress={handleLogout}>
-                <Ionicons name="log-out-outline" size={26} color="#4b5563" />
-                <Text style={[styles.buttonText, { color: '#4b5563' }]}>
-                  Logout
-                </Text>
+                <Ionicons name="log-out-outline" size={26} color="#544d4d" />
+                <Text style={styles.buttonText}>Logout</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </>
+        </ScrollView>
       )}
     </SafeAreaView>
   );
@@ -155,15 +164,26 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ececec',
+    backgroundColor: '#eceefc',
     paddingHorizontal: 20,
     paddingTop: 30,
+  },
+  notificationIcon: {
+    position: 'absolute',
+    top: 35,
+    right: 25,
+    zIndex: 1,
+    padding: 5,
+  },
+  scrollContentContainer: {
+    paddingBottom: 40,
+    flexGrow: 1,
   },
   cardSection: {
     padding: 10,
     marginBottom: 25,
     marginHorizontal: -5,
-    marginTop: 30,
+    marginTop: 20,
   },
   profileSection: {
     backgroundColor: '#fff',
@@ -181,24 +201,24 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1e293b',
+    color: '#3a125d',
     marginBottom: 2,
     marginLeft: 5,
   },
   email: {
     fontSize: 15,
-    color: '#475569',
+    color: '#544d4d',
     marginBottom: 2,
     marginLeft: 5,
   },
   joined: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#636060',
     marginLeft: 5,
     marginBottom: 12,
   },
   editButton: {
-    backgroundColor: '#5c5c5c',
+    backgroundColor: '#e89d07',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 10,
@@ -207,7 +227,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: '#fff',
     fontSize: 15,
-    fontWeight: '400',
+    fontWeight: '600',
   },
   buttonsContainer: {
     marginTop: 5,
@@ -220,12 +240,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     paddingHorizontal: 10,
-    paddingVertical: 15, 
+    paddingVertical: 15,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 10,
+    color: '#544d4d',
   },
   errorText: {
     color: 'red',

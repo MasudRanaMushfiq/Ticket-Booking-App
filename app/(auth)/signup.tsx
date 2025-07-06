@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {View,Text,TextInput,TouchableOpacity,StyleSheet,} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link, router } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -58,6 +58,7 @@ export default function SignUpScreen() {
 
       <TextInput
         placeholder="Full Name"
+        placeholderTextColor="#8b8686"
         value={fullName}
         onChangeText={setFullName}
         style={styles.input}
@@ -65,6 +66,7 @@ export default function SignUpScreen() {
 
       <TextInput
         placeholder="Email"
+        placeholderTextColor="#8b8686"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
@@ -73,6 +75,7 @@ export default function SignUpScreen() {
 
       <TextInput
         placeholder="Password"
+        placeholderTextColor="#8b8686"
         value={password}
         onChangeText={setPassword}
         style={styles.input}
@@ -83,7 +86,7 @@ export default function SignUpScreen() {
       {successMsg ? <Text style={styles.successText}>{successMsg}</Text> : null}
 
       <TouchableOpacity
-        style={[styles.button, loading ? { opacity: 0.6 } : {}]}
+        style={[styles.button, loading ? styles.buttonDisabled : {}]}
         onPress={handleSignUp}
         disabled={loading}
       >
@@ -105,7 +108,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#eceefc', // background color
     justifyContent: 'center',
     padding: 24,
   },
@@ -113,58 +116,61 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#1e293b',
+    color: '#3a125d', // primary color
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 15,
     textAlign: 'center',
-    color: '#64748b',
+    color: '#544d4d', // text color
     marginBottom: 25,
   },
   input: {
     height: 50,
-    borderColor: '#cbd5e1',
+    borderColor: '#3a125d', // primary color border
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 15,
     marginBottom: 15,
     backgroundColor: '#fff',
+    color: '#544d4d', // input text color
   },
   button: {
-    backgroundColor: '#16A34A',
+    backgroundColor: '#3a125d', // primary color
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
     elevation: 2,
     marginTop: 5,
   },
+  buttonDisabled: {
+    opacity: 0.6,
+    backgroundColor: '#636060', // disabled color
+  },
   buttonText: {
-    color: '#fff',
+    color: '#eceefc', // background color for contrast
     fontSize: 17,
     fontWeight: '600',
   },
   linkText: {
     marginTop: 25,
     textAlign: 'center',
-    color: '#475569',
+    color: '#544d4d', // text color
   },
   link: {
-    color: '#2563eb',
+    color: '#e89d07', // secondary color
     fontWeight: 'bold',
   },
   errorText: {
-    color: 'red',
+    color: '#b91c1c', // red error color
     marginBottom: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
   successText: {
-    color: 'green',
+    color: '#3a6e00', // dark green tone (you can adjust)
     marginBottom: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
 });
-
-

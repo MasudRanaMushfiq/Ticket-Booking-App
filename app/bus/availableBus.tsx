@@ -122,7 +122,7 @@ export default function AvailableBusScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#10B981" />
+        <ActivityIndicator size="large" color="#3a125d" />
       </View>
     );
   }
@@ -167,7 +167,7 @@ export default function AvailableBusScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#eceefc', // Background color from your palette
     paddingHorizontal: 20,
     paddingTop: 20,
   },
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 18,
-    color: '#1e293b',
+    color: '#3a125d', // Primary color
     textAlign: 'center',
   },
   firstSectionCard: {
@@ -200,20 +200,20 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#0f172a',
+    color: '#544d4d', // Text color
     marginBottom: 14,
   },
   noBus: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#64748b',
+    color: '#636060', // Disabled color
     marginTop: 20,
     fontStyle: 'italic',
   },
   busRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#e4fdfd',
+    backgroundColor: '#e9e6fa', // very light shade of primary (#3a125d) for subtle highlight
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -229,33 +229,32 @@ const styles = StyleSheet.create({
   busName: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#334155',
+    color: '#3a125d', // primary color for emphasis
     marginBottom: 4,
   },
   departure: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#544d4d', // text color
   },
   date: {
     fontSize: 14,
-    color: 'black',
-    fontWeight: '900',
+    color: '#544d4d', // primary color
   },
   seats: {
     fontSize: 16,
     fontWeight: '700',
   },
   fullSeats: {
-    color: '#DC2626',
+    color: '#DC2626', // red for full seats
   },
   availableButton: {
-    backgroundColor: '#16A34A',
+    backgroundColor: '#e89d07', // secondary color
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
   },
   availableButtonText: {
-    color: '#fff',
+    color: '#eceefc', // background color for contrast
     fontWeight: '700',
     fontSize: 15,
   },

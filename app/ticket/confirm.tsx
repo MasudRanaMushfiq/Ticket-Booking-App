@@ -94,7 +94,7 @@ export default function ConfirmScreen() {
   if (!busId || typeof busId !== 'string') {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={{ fontSize: 20, color: 'red', textAlign: 'center' }}>
+        <Text style={[styles.errorText, { fontSize: 20, textAlign: 'center' }]}>
           Error: Bus ID is missing or invalid.
         </Text>
       </SafeAreaView>
@@ -105,7 +105,7 @@ export default function ConfirmScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.ticketCard}>
         <View style={styles.header}>
-          <Ionicons name="bus" size={40} color="#16A34A" />
+          <Ionicons name="bus" size={40} color="#e89d07" />
           <Text style={styles.title}>Bus Ticket Receipt</Text>
         </View>
 
@@ -143,13 +143,13 @@ export default function ConfirmScreen() {
           <Text style={styles.value}>৳ {price}</Text>
         </View>
 
-        {/* 🔶 New Field for Transaction ID */}
+        {/* Transaction ID Input */}
         <TextInput
           placeholder="Enter Transaction ID"
           style={styles.input}
           value={transactionId}
           onChangeText={setTransactionId}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#636060"
         />
 
         <View style={styles.divider} />
@@ -166,7 +166,7 @@ export default function ConfirmScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ededed',
+    backgroundColor: '#eceefc', // background color from your palette
     padding: 24,
     justifyContent: 'center',
   },
@@ -190,10 +190,10 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     marginLeft: 12,
-    color: '#16A34A',
+    color: '#3a125d', // primary color for title
   },
   divider: {
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: '#e89d07', // secondary color for divider
     borderBottomWidth: 2,
     marginVertical: 10,
   },
@@ -204,42 +204,46 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 18,
-    color: '#475569',
+    color: '#544d4d', // text color
     fontWeight: '600',
   },
   value: {
     fontSize: 18,
-    color: '#1e293b',
+    color: '#3a125d', // primary color for values
     fontWeight: '600',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#636060', // disabled color used for placeholder
     borderRadius: 10,
     padding: 12,
     marginTop: 12,
     fontSize: 16,
-    color: '#1e293b',
+    color: '#544d4d',
   },
   thankYou: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#16A34A',
+    color: '#e89d07', // secondary color
     fontWeight: '600',
     marginTop: 12,
   },
   button: {
     marginHorizontal: 20,
     marginVertical: 30,
-    backgroundColor: '#16A34A',
+    backgroundColor: '#3a125d', // primary color
     paddingVertical: 16,
     borderRadius: 15,
     alignItems: 'center',
     elevation: 3,
   },
   buttonText: {
-    color: '#fff',
+    color: '#eceefc', // background color for contrast
     fontSize: 18,
+    fontWeight: '700',
+  },
+  errorText: {
+    color: 'red',
     fontWeight: '700',
   },
 });

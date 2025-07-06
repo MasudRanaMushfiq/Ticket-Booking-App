@@ -87,7 +87,7 @@ export default function AllBusScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#10B981" />
+        <ActivityIndicator size="large" color="#3a125d" />
       </View>
     );
   }
@@ -115,7 +115,7 @@ export default function AllBusScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ecebeb',
+    backgroundColor: '#eceefc', // Background Color
     padding: 20,
   },
   center: {
@@ -124,8 +124,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successMsg: {
-    backgroundColor: '#d1fae5',
-    color: '#065f46',
+    backgroundColor: '#e89d07', // Secondary Color as background for success message
+    color: '#3a125d', // Primary Color text for contrast
     padding: 10,
     borderRadius: 8,
     textAlign: 'center',
@@ -138,12 +138,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 40,
     textAlign: 'center',
-    color: '#1e293b',
+    color: '#3a125d', // Primary Color for title
   },
   noBus: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#64748b',
+    color: '#636060', // Disable Color for less emphasis
     marginTop: 50,
   },
   busCard: {
@@ -152,20 +152,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 12,
+    // Optional subtle shadow for iOS & Android:
+    shadowColor: '#3a125d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   busName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#037679',
+    color: '#3a125d', // Primary Color
   },
   info: {
     fontSize: 14,
-    color: '#475569',
+    color: '#544d4d', // Text Color
     marginTop: 4,
   },
   booked: {
     fontSize: 14,
-    color: '#475569',
+    color: '#544d4d', // Text Color
   },
   rowBetween: {
     flexDirection: 'row',
@@ -174,13 +180,13 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   deleteButtonInline: {
-    backgroundColor: '#ef4444',
+    backgroundColor: '#e89d07', // Secondary Color
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
   },
   deleteText: {
-    color: '#fff',
+    color: '#3a125d', // Primary Color text on secondary background
     fontWeight: '900',
   },
 });

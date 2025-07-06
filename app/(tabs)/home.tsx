@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import SwapIcon from '@/assets/images/SwapIcon';
 
 const divisions = [
   'Dhaka',
@@ -103,23 +104,29 @@ export default function HomeScreen() {
   return (
     <Wrapper style={styles.container} behavior="padding">
       <View style={styles.messageContainer}>
-        <Text style={[styles.successMessage, { opacity: showSuccessMsg ? 1 : 0 }]}>
-          ✅ You have successfully logged in.
-        </Text>
+        <Text style={[styles.successMessage, { opacity: showSuccessMsg ? 1 : 0 }]}>✅ You have successfully logged in.</Text>
       </View>
 
       <View style={styles.topSection}>
         <Text style={styles.title}>Search</Text>
 
-        {/* From input */}
-        <View style={{ zIndex: 4 }}>
+        <View style={{ zIndex: 4, position: 'relative' }}>
           <TextInput
             style={styles.input}
             placeholder="From"
+            placeholderTextColor="#8b8686"
             value={from}
             onChangeText={handleFromChange}
             onFocus={() => setActiveInput('from')}
+            selectionColor="#3a125d"
           />
+
+          <View style={styles.swapIconWrapperBetween}>
+            <TouchableOpacity onPress={swapFromTo} activeOpacity={0.7} style={styles.swapCard}>
+              <SwapIcon size={20} color="#e89d07" />
+            </TouchableOpacity>
+          </View>
+
           {activeInput === 'from' && fromSuggestions.length > 0 && (
             <FlatList
               data={fromSuggestions}
@@ -141,21 +148,15 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Swap icon centered in full row */}
-        <View style={styles.swapRow}>
-          <TouchableOpacity onPress={swapFromTo} activeOpacity={0.7}>
-            <Text style={styles.swapIcon}>🔄</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* To input */}
         <View style={{ zIndex: 2 }}>
           <TextInput
             style={styles.input}
             placeholder="To"
+            placeholderTextColor="#8b8686"
             value={to}
             onChangeText={handleToChange}
             onFocus={() => setActiveInput('to')}
+            selectionColor="#3a125d"
           />
           {activeInput === 'to' && toSuggestions.length > 0 && (
             <FlatList
@@ -178,11 +179,8 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <TouchableOpacity
-          style={[styles.input, styles.dateInput]}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={{ color: '#475569' }}>{date.toDateString()}</Text>
+        <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+          <Text style={{ color: '#fff', fontWeight: '600' }}>{date.toDateString()}</Text>
         </TouchableOpacity>
 
         {showDatePicker && (
@@ -202,9 +200,7 @@ export default function HomeScreen() {
 
       <View style={styles.imageSection}>
         <Image
-          source={{
-            uri: 'https://cdn-icons-png.flaticon.com/512/854/854894.png',
-          }}
+          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/854/854894.png' }}
           style={styles.image}
           resizeMode="contain"
         />
@@ -216,7 +212,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f6f6',
+    backgroundColor: '#eceefc',
     paddingHorizontal: 24,
     paddingTop: 50,
   },
@@ -227,8 +223,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   successMessage: {
-    backgroundColor: '#dcfce7',
-    color: '#15803d',
+    backgroundColor: '#e6f4d9',
+    color: '#567d0b',
     textAlign: 'center',
     paddingVertical: 5,
     paddingHorizontal: 10,
@@ -240,7 +236,7 @@ const styles = StyleSheet.create({
     right: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 3,
     elevation: 3,
   },
@@ -250,25 +246,29 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#1e293b',
+    color: '#3a125d',
     marginBottom: 10,
   },
   input: {
     height: 48,
-    borderColor: '#cbd5e1',
+    borderColor: '#3a125d',
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 15,
     backgroundColor: '#fff',
     justifyContent: 'center',
+    color: '#544d4d',
+    marginBottom: 20,
   },
-  dateInput: {
+  dateButton: {
+    backgroundColor: '#e89d07',
     paddingVertical: 12,
-    marginTop: 10,
+    borderRadius: 10,
+    alignItems: 'center',
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#3a125d',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
   },
   buttonText: {
-    color: '#fff',
+    color: '#eceefc',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#e89d07',
     borderRadius: 8,
     maxHeight: 150,
     zIndex: 99,
@@ -296,7 +296,8 @@ const styles = StyleSheet.create({
   suggestionItem: {
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#f5deb3',
+    color: '#544d4d',
   },
   imageSection: {
     justifyContent: 'center',
@@ -308,13 +309,21 @@ const styles = StyleSheet.create({
     width: '80%',
     height: 180,
   },
-  swapRow: {
-    marginBottom: 5,
-    alignItems: 'center',
-    width: '100%',
+  swapIconWrapperBetween: {
+    position: 'absolute',
+    top: 42,
+    left: '50%',
+    marginLeft: -22,
+    zIndex: 10,
   },
-  swapIcon: {
-    fontSize: 32,
-    color: '#2563eb',
+  swapCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
   },
 });

@@ -82,7 +82,7 @@ export default function EditProfileScreen() {
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#10B981" />
+        <ActivityIndicator size="large" color="#3a125d" />
       </View>
     );
   }
@@ -118,44 +118,44 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#eceefc', // background color from palette
   },
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#eceefc', // background color
   },
   label: {
     fontSize: 16,
-    color: '#374151',
+    color: '#544d4d', // text color from palette
     marginTop: 16,
     fontWeight: '600',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: '#636060', // disabled color for border
     borderRadius: 8,
     padding: 12,
     marginTop: 8,
     fontSize: 16,
     backgroundColor: '#fff',
+    color: '#544d4d',
   },
   readOnlyInput: {
-    backgroundColor: '#e5e7eb', // light gray to indicate disabled
-    color: '#6b7280', // gray text
+    backgroundColor: '#eceefc', // background color to indicate readonly
+    color: '#636060', // disabled text color
   },
   button: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#3a125d', // primary color
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 32,
+    elevation: 3,
   },
   buttonText: {
-    color: '#fff',
+    color: '#eceefc', // text color for button
     fontSize: 16,
     fontWeight: 'bold',
   },
 });
-
-
-

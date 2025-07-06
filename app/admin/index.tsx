@@ -23,18 +23,18 @@ export default function Dashboard() {
       <Text style={styles.title}>Dashboard</Text>
 
       <TouchableOpacity style={styles.button} onPress={handleAllBus}>
-        <Ionicons name="bus-outline" size={20} color="#333" style={styles.icon} />
+        <Ionicons name="bus-outline" size={20} color="#3a125d" style={styles.icon} />
         <Text style={styles.buttonText}>All Bus</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleAddBus}>
-        <Ionicons name="add-circle-outline" size={20} color="#333" style={styles.icon} />
+        <Ionicons name="add-circle-outline" size={20} color="#3a125d" style={styles.icon} />
         <Text style={styles.buttonText}>Add Bus</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleAllUser}>
-        <Ionicons name="people-outline" size={20} color="#333" style={styles.icon} />
-        <Text style={styles.buttonText}>All User</Text>
+        <Ionicons name="people-outline" size={20} color="#3a125d" style={styles.icon} />
+        <Text style={styles.buttonText}>All Users</Text>
       </TouchableOpacity>
     </View>
   );
@@ -45,14 +45,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 60,
     paddingHorizontal: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#eceefc', // Background Color
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginVertical: 30,
     marginLeft: 16,
-    color: '#222',
+    color: '#3a125d', // Primary Color
   },
   button: {
     flexDirection: 'row',
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     marginHorizontal: 15,
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: '#3a125d',
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
-    color: '#333',
+    color: '#544d4d', // Text Color
     fontWeight: '500',
   },
 });

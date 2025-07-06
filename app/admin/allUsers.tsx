@@ -70,7 +70,7 @@ export default function AllUserScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#333" />
+        <ActivityIndicator size="large" color="#3a125d" />
       </View>
     );
   }
@@ -78,7 +78,7 @@ export default function AllUserScreen() {
   if (users.length === 0) {
     return (
       <View style={styles.center}>
-        <Text>No users found.</Text>
+        <Text style={{ color: '#636060' }}>No users found.</Text>
       </View>
     );
   }
@@ -103,7 +103,7 @@ export default function AllUserScreen() {
               onPress={() => handleDeleteUser(item.id)}
               style={styles.deleteButton}
             >
-              <Ionicons name="trash-outline" size={22} color="#ff4d4f" />
+              <Ionicons name="trash-outline" size={22} color="#e89d07" />
             </TouchableOpacity>
           </View>
         )}
@@ -115,12 +115,12 @@ export default function AllUserScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ececec',
+    backgroundColor: '#eceefc', // Background Color
   },
   heading: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#3a125d', // Primary Color
     textAlign: 'center',
     marginTop: 70,
     marginBottom: 15,
@@ -137,22 +137,26 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
     borderRadius: 10,
-    elevation: 1,
+    elevation: 2,
+    shadowColor: '#3a125d',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#048377',
+    color: '#3a125d', // Primary Color
   },
   email: {
     fontSize: 15,
-    color: '#666',
+    color: '#544d4d', // Text Color
     marginTop: 4,
   },
   bookingCount: {
     marginTop: 6,
     fontSize: 14,
-    color: 'black',
+    color: '#636060', // Disable Color
   },
   deleteButton: {
     padding: 8,

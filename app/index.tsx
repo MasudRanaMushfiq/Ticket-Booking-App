@@ -1,49 +1,33 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
 
 export default function SplashScreen() {
   const router = useRouter();
 
-  const handleGetStarted = () => {
-    router.replace('/signin'); // Navigate to SignIn screen
-  };
-
   return (
     <View style={styles.container}>
-      <View style={styles.iconContainer}>
-        <MaterialCommunityIcons
-          name="bus"
-          size={200}
-          color="#DB2777" // hard pink
-        />
-      </View>
+      {/* Bus Image - Bigger, white */}
+      <Image
+        source={require('@/assets/images/image.png')} // Your bus image path
+        style={styles.busImage}
+        resizeMode="contain"
+      />
 
+      {/* Centered Text Container */}
       <View style={styles.textContainer}>
-        <Text style={styles.title}>Best Ticket Booking App</Text>
-        <Text style={styles.caption}>Fast, simple & reliable travel booking</Text>
+        <Text style={styles.logoText}>
+          <Text style={styles.whiteText}>Bus</Text>
+          <Text style={styles.secondaryText}>Trip</Text>
+        </Text>
+        <Text style={styles.subtitle}>Book Your Bus Ticket</Text>
       </View>
 
-      <TouchableOpacity onPress={handleGetStarted} style={styles.buttonWrapper}>
-        <LinearGradient
-          colors={['#DB2777', '#BE185D']} // strong pink gradient
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.button}
-        >
-          <Text style={styles.buttonText}>Get Started</Text>
-          <Ionicons name="arrow-forward" size={24} color="#fff" />
-        </LinearGradient>
+      {/* Get Started Button */}
+      <TouchableOpacity style={styles.getStartedBtn} onPress={() => router.replace('/signin')}>
+        <Text style={styles.getStartedText}>Get Started</Text>
+        <Feather name="arrow-right" size={20} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -52,49 +36,59 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'space-around',
+    backgroundColor: '#3a125d', // Primary Color
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 30,
+    padding: 20,
   },
-  iconContainer: {
-    marginTop: 40,
-    alignItems: 'center',
+  busImage: {
+    width: 200,
+    height: 200,
+    tintColor: '#fff', // make image white
+    marginBottom: -30,
+    marginTop: -70,
   },
   textContainer: {
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
-  title: {
-    fontSize: 28,
+  logoText: {
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#1E293B',
-    textAlign: 'center',
-    marginBottom: 10,
   },
-  caption: {
-    fontSize: 18,
-    color: '#475569',
-    textAlign: 'center',
+  whiteText: {
+    color: '#FFFFFF',
   },
-  buttonWrapper: {
-    width: width - 100,
+  secondaryText: {
+    color: '#e89d07', // Secondary Color
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#eceefc', // Background Color for contrast
+    letterSpacing: 1,
+  },
+  getStartedBtn: {
+    position: 'absolute',
+    bottom: 100,
+    backgroundColor: '#e89d07', // Secondary Color
+    paddingVertical: 18,
+    paddingHorizontal: 60,
     borderRadius: 30,
-    overflow: 'hidden',
-  },
-  button: {
     flexDirection: 'row',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 30,
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
-  buttonText: {
-    fontSize: 18,
+  getStartedText: {
     color: '#fff',
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '600',
   },
 });
+
+
+
+// for my project always follow this color code Color Palette
+// Primary Color #3a125d
+// Secondary Color #e89d07
+// Background Color #eceefc
+// Text Color #544d4d
+// Disable Color #636060

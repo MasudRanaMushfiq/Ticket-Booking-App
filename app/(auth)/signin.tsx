@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {View,Text,TextInput,TouchableOpacity,StyleSheet,} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link, useRouter, useLocalSearchParams } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/firebaseConfig';
@@ -20,13 +20,11 @@ export default function SignInScreen() {
     }
   }, [params.loggedOut]);
 
-
   const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password.');
       return;
     }
-
     try {
       await signInWithEmailAndPassword(auth, email, password);
       setError('');
@@ -49,8 +47,12 @@ export default function SignInScreen() {
 
       <TextInput
         placeholder="Email"
+        placeholderTextColor="#8b8686"
         value={email}
-        onChangeText={(text) => {setEmail(text);setError('');}}
+        onChangeText={(text) => {
+          setEmail(text);
+          setError('');
+        }}
         style={styles.input}
         keyboardType="email-address"
         autoCapitalize="none"
@@ -59,20 +61,17 @@ export default function SignInScreen() {
 
       <TextInput
         placeholder="Password"
+        placeholderTextColor="#8b8686"
         value={password}
-        onChangeText={(text) => {setPassword(text);setError('');}}
+        onChangeText={(text) => {
+          setPassword(text);
+          setError('');
+        }}
         style={styles.input}
         secureTextEntry
       />
 
-      {/* Error shown below password input */}
-      {error !== '' && <Text style={styles.errorText}>{error}</Text>} 
-
-      {showLogoutMsg && (
-        <Text style={styles.logoutMessage}>
-         You have been logged out successfully.
-      </Text>)}
-
+      {error !== '' && <Text style={styles.errorText}>{error}</Text>}
 
       <TouchableOpacity style={styles.button} onPress={handleSignIn}>
         <Text style={styles.buttonText}>Sign In</Text>
@@ -91,55 +90,55 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#eceefc', // Background color
     justifyContent: 'center',
     padding: 24,
   },
   logoutMessage: {
-  position: 'absolute',
-  top: 50,
-  left: 0,
-  right: 0,
-  backgroundColor: '#fee2e2',
-  padding: 10,
-  marginHorizontal: 20,
-  borderRadius: 8,
-  color: '#b91c1c',
-  textAlign: 'center',
-  fontSize: 14,
-  zIndex: 10,
-  elevation: 10,
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 20,
+    backgroundColor: '#fde8b0', // lighter tone of secondary #e89d07
+    padding: 10,
+    borderRadius: 8,
+    color: '#7a5a00', // dark secondary shade
+    textAlign: 'center',
+    fontSize: 14,
+    zIndex: 10,
+    elevation: 10,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#1e293b',
+    color: '#3a125d', // primary color
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#64748b',
+    color: '#544d4d', // text color
     marginBottom: 30,
   },
   input: {
     height: 50,
-    borderColor: '#cbd5e1',
+    borderColor: '#3a125d', // primary color border
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 15,
     marginBottom: 15,
     backgroundColor: '#fff',
+    color: '#544d4d', // input text color
   },
   errorText: {
-    color: 'red',
+    color: '#b91c1c', // red error color
     fontSize: 13,
     marginBottom: 10,
     marginLeft: 5,
   },
   button: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#3a125d', // primary color
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -151,19 +150,17 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: '#eceefc', // background color for contrast (white-ish)
     fontSize: 18,
     fontWeight: '600',
   },
   linkText: {
     marginTop: 20,
     textAlign: 'center',
-    color: '#475569',
+    color: '#544d4d', // text color
   },
   link: {
-    color: '#2563eb',
+    color: '#e89d07', // secondary color
     fontWeight: 'bold',
   },
 });
-
-

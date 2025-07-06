@@ -77,7 +77,7 @@ export default function TicketHistory() {
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <ActivityIndicator size="large" color="#10B981" />
+        <ActivityIndicator size="large" color="#3a125d" />
       </SafeAreaView>
     );
   }
@@ -102,8 +102,12 @@ export default function TicketHistory() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Purple Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Ticket History</Text>
+      </View>
+
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Your Booked Tickets</Text>
 
         {/* Upcoming Tickets Section */}
         <Text style={styles.sectionTitle}>Upcoming</Text>
@@ -160,8 +164,19 @@ export default function TicketHistory() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#edf0f1',
-    paddingTop: 10,
+    paddingTop: 35,
+    backgroundColor: '#eceefc', // background color from palette
+  },
+  header: {
+    backgroundColor: '#3a125d', // purple primary color
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
   },
   container: {
     paddingHorizontal: 20,
@@ -170,18 +185,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    marginBottom: 20,
-    color: 'black',
+    marginTop: 40,
+    color: '#3a125d', // primary color
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     marginTop: 20,
     marginBottom: 12,
-    color: '#1e293b',
+    color: '#544d4d', // text color
   },
   ticketCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
@@ -194,22 +209,22 @@ const styles = StyleSheet.create({
   route: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#017083',
+    color: '#3a125d', // primary color for route
     marginBottom: 6,
   },
   busName: {
     fontSize: 15,
-    color: 'black',
+    color: '#544d4d', // text color
     marginBottom: 4,
   },
   detail: {
     fontSize: 14,
-    color: '#475569',
+    color: '#636060', // disabled color
     marginBottom: 2,
   },
   noTicket: {
     fontSize: 16,
-    color: '#64748b',
+    color: '#64748b', // lighter text
     textAlign: 'center',
     marginTop: 10,
     marginBottom: 10,
