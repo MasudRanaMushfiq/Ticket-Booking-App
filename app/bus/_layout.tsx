@@ -4,7 +4,7 @@ export default function Layout() {
   return (
     <Stack>
       <Stack.Screen
-        name="availableBus"
+        name="availablebus"
         options={{
           headerShown: true,
           headerTitle: 'Available Bus',
@@ -19,7 +19,7 @@ export default function Layout() {
         }}
       />
       <Stack.Screen
-        name="availableSeat"
+        name="availableseat"
         options={{
           headerShown: true,
           headerTitle: 'Available Seat',

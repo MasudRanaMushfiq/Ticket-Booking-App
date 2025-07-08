@@ -66,7 +66,7 @@ export default function ProfileScreen() {
   };
 
   const handleEdit = () => {
-    router.push('/screen/editProfile');
+    router.push('/screen/editprofile');
   };
 
   if (loading) {

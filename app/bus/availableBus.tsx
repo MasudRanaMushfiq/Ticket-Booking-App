@@ -101,7 +101,7 @@ export default function AvailableBusScreen() {
             style={styles.availableButton}
             onPress={() =>
               router.push({
-                pathname: '/bus/availableSeat',
+                pathname: '/bus/availableseat',
                 params: {
                   bus: JSON.stringify(item),
                   busId: item.id,

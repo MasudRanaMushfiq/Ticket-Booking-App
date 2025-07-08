@@ -64,7 +64,7 @@ export default function HomeScreen() {
     normalizedDate.setHours(0, 0, 0, 0);
 
     router.push({
-      pathname: '/bus/availableBus',
+      pathname: '/bus/availablebus',
       params: {
         from,
         to,
