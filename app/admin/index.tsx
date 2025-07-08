@@ -7,15 +7,15 @@ export default function Dashboard() {
   const router = useRouter();
 
   const handleAllBus = () => {
-    router.push('/admin/allBus');
+    router.push('/admin/allbus');
   };
 
   const handleAddBus = () => {
-    router.push('/admin/addBus');
+    router.push('/admin/addbus');
   };
 
   const handleAllUser = () => {
-    router.push('/admin/allUsers');
+    router.push('/admin/allusers');
   };
 
   return (
