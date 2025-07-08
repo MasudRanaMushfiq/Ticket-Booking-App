@@ -10,7 +10,7 @@ web-build/
 expo-env.d.ts
 
 # Ignore Firebase config file
-firebaseConfig.js
+# firebaseConfig.js
 
 
 # Native

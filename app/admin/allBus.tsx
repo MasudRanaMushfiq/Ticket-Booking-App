@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { db } from '@/firebaseConfig';
+import { db } from '../../firebaseConfig';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
 export default function AllBusScreen() {

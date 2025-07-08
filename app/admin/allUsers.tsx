@@ -9,7 +9,7 @@ import {
   Alert,
   SafeAreaView,
 } from 'react-native';
-import { db } from '@/firebaseConfig';
+import { db } from '../../firebaseConfig';
 import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 

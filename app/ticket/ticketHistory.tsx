@@ -7,7 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { auth, db } from '@/firebaseConfig';
+import { auth, db } from '../../firebaseConfig';
 import { useRouter } from 'expo-router';
 import { collection, getDocs, Timestamp, doc, getDoc } from 'firebase/firestore';
 

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { collection, doc, setDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/firebaseConfig';
+import { db } from '../../firebaseConfig';
 import { useRouter } from 'expo-router';
 
 export default function AddBusScreen() {

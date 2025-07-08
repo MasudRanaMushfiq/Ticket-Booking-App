@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/firebaseConfig';
+import { db } from '../../firebaseConfig';
 
 interface Seat {
   id: number;

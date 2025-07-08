@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link, useRouter, useLocalSearchParams } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/firebaseConfig';
+import { auth } from '../../firebaseConfig';
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function SignInScreen() {
       setError('Please enter both email and password.');
       return;
     }
-    try {
+    try {;;
       await signInWithEmailAndPassword(auth, email, password);
       setError('');
       router.replace({ pathname: '/home', params: { loggedIn: 'true' } });

@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { auth, db } from '@/firebaseConfig';
+import { auth, db } from '../../firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
 

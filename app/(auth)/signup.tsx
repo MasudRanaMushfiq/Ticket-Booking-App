@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { Link, router } from 'expo-router';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@/firebaseConfig';
+import { auth, db } from '../../firebaseConfig';
 
 export default function SignUpScreen() {
   const [fullName, setFullName] = useState('');

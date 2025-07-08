@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { db } from '@/firebaseConfig';
+import { db } from '../../firebaseConfig';
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
 
 export default function AvailableBusScreen() {

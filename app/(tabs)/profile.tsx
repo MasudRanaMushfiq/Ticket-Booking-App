@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { signOut } from 'firebase/auth';
-import { auth, db } from '@/firebaseConfig';
+import { auth, db } from '../../firebaseConfig';
 import { useRouter } from 'expo-router';
 import { doc, getDoc, Timestamp } from 'firebase/firestore';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
