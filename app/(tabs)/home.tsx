@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import SwapIcon from '@/assets/images/SwapIcon';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
+  FlatList,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Image,
-  Platform,
-  KeyboardAvoidingView,
-  FlatList,
-  Keyboard,
+  View,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import SwapIcon from '@/assets/images/SwapIcon';
 
 const divisions = [
   'Dhaka',
@@ -34,11 +34,14 @@ export default function HomeScreen() {
   const [to, setTo] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showSuccessMsg, setShowSuccessMsg] = useState(false);
+  // Removed: const [showSuccessMsg, setShowSuccessMsg] = useState(false); // This state is no longer needed
+
   const [fromSuggestions, setFromSuggestions] = useState<string[]>([]);
   const [toSuggestions, setToSuggestions] = useState<string[]>([]);
   const [activeInput, setActiveInput] = useState<'from' | 'to' | null>(null);
 
+  // Removed the useEffect hook that listened for params.loggedIn
+  /*
   useEffect(() => {
     if (params.loggedIn === 'true') {
       setShowSuccessMsg(true);
@@ -48,6 +51,7 @@ export default function HomeScreen() {
       return () => clearTimeout(timer);
     }
   }, [params.loggedIn]);
+  */
 
   const onChangeDate = (event: any, selectedDate: Date | undefined) => {
     setShowDatePicker(false);
@@ -102,14 +106,17 @@ export default function HomeScreen() {
   const Wrapper = Platform.OS === 'ios' ? KeyboardAvoidingView : View;
 
   return (
-    <Wrapper style={styles.container} behavior="padding">
-      <View style={styles.messageContainer}>
-        <Text style={[styles.successMessage, { opacity: showSuccessMsg ? 1 : 0 }]}>✅ You have successfully logged in.</Text>
+    <Wrapper style={styles.bg} behavior="padding">
+      <View style={styles.headerRow}>
+        <Image
+          source={{ uri: 'https://img.icons8.com/color/96/000000/bus.png' }}
+          style={styles.logo}
+        />
+        <Text style={styles.title}>Find Your Bus Now</Text>
       </View>
-
+      <Text style={styles.subtitle}>Plan Your Journey With Our Ease Solution</Text>
+      
       <View style={styles.topSection}>
-        <Text style={styles.title}>Search</Text>
-
         <View style={{ zIndex: 4, position: 'relative' }}>
           <TextInput
             style={styles.input}
@@ -120,13 +127,11 @@ export default function HomeScreen() {
             onFocus={() => setActiveInput('from')}
             selectionColor="#3a125d"
           />
-
           <View style={styles.swapIconWrapperBetween}>
             <TouchableOpacity onPress={swapFromTo} activeOpacity={0.7} style={styles.swapCard}>
               <SwapIcon size={20} color="#e89d07" />
             </TouchableOpacity>
           </View>
-
           {activeInput === 'from' && fromSuggestions.length > 0 && (
             <FlatList
               data={fromSuggestions}
@@ -147,7 +152,6 @@ export default function HomeScreen() {
             />
           )}
         </View>
-
         <View style={{ zIndex: 2 }}>
           <TextInput
             style={styles.input}
@@ -178,11 +182,9 @@ export default function HomeScreen() {
             />
           )}
         </View>
-
         <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-          <Text style={{ color: '#fff', fontWeight: '600' }}>{date.toDateString()}</Text>
+          <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16, }}>{date.toDateString()}</Text>
         </TouchableOpacity>
-
         {showDatePicker && (
           <DateTimePicker
             value={date}
@@ -192,94 +194,149 @@ export default function HomeScreen() {
             minimumDate={new Date()}
           />
         )}
-
         <TouchableOpacity style={styles.button} onPress={handleSearch}>
           <Text style={styles.buttonText}>Search</Text>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.imageSection}>
-        <Image
-          source={{ uri: 'https://cdn-icons-png.flaticon.com/512/854/854894.png' }}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
+      <FlatList
+        data={tourImages}
+        keyExtractor={(item, idx) => idx.toString()}
+        showsVerticalScrollIndicator={false}
+        style={styles.tourImageList}
+        contentContainerStyle={{ paddingVertical: 18, paddingHorizontal: 0 }}
+        renderItem={({ item }) => (
+          <View style={styles.tourCard}>
+            <Image source={{ uri: item.image }} style={styles.tourImage} resizeMode="cover" />
+            <Text style={styles.tourTitle}>{item.title}</Text>
+            <Text style={styles.tourDesc}>{item.desc}</Text>
+          </View>
+        )}
+      />
     </Wrapper>
   );
 }
 
+const tourImages = [
+  {
+    image: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+    title: 'Luxury AC Bus Tour',
+    desc: 'Experience comfort and style on our premium AC buses across Bangladesh.',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=400&q=80',
+    title: 'City Sightseeing',
+    desc: 'Hop on for a city tour and explore the best spots with guided bus tours.',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1465447142348-e9952c393450?auto=format&fit=crop&w=400&q=80',
+    title: 'Intercity Express',
+    desc: 'Fast and safe intercity bus journeys connecting all major divisions.',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+    title: 'Family Tour Bus',
+    desc: 'Spacious and family-friendly buses for your next group adventure.',
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+    title: 'Night Coach',
+    desc: 'Travel overnight in comfort with our safe and reliable night coaches.',
+  },
+];
+
 const styles = StyleSheet.create({
-  container: {
+  bg: {
     flex: 1,
     backgroundColor: '#eceefc',
-    paddingHorizontal: 24,
-    paddingTop: 50,
-  },
-  messageContainer: {
-    height: 30,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 0,
+    paddingTop: 40,
   },
-  successMessage: {
-    backgroundColor: '#e6f4d9',
-    color: '#567d0b',
-    textAlign: 'center',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    fontSize: 14,
-    position: 'absolute',
-    top: 0,
-    left: 24,
-    right: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    marginTop: 15,
+    width: '90%',
+    alignSelf: 'center',
   },
-  topSection: {
-    zIndex: 0,
+  logo: {
+    width: 50,
+    height: 50,
+    marginRight: 10,
+    borderRadius: 12,
+    backgroundColor: '#eceefc',
   },
   title: {
     fontSize: 26,
     fontWeight: 'bold',
     color: '#3a125d',
-    marginBottom: 10,
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontSize: 15,
+    textAlign: 'center',
+    color: '#544d4d',
+    marginTop: -5,
+    marginBottom: 40,
+    width: '90%',
+    alignSelf: 'center',
+  },
+  topSection: {
+    zIndex: 0,
+    width: '85%',
+    maxWidth: 400,
+    marginBottom: 0,
+    alignSelf: 'center',
   },
   input: {
     height: 48,
     borderColor: '#3a125d',
-    borderWidth: 1,
+    borderWidth: 1.2,
     borderRadius: 10,
     paddingHorizontal: 15,
-    backgroundColor: '#fff',
+    backgroundColor: '#f7f7fa',
     justifyContent: 'center',
     color: '#544d4d',
-    marginBottom: 20,
+    marginBottom: 15,
+    fontSize: 16,
+    width: '100%',
+    alignSelf: 'center',
   },
   dateButton: {
     backgroundColor: '#e89d07',
-    paddingVertical: 12,
+    paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 3,
+    marginTop: 2,
+    shadowColor: '#e89d07',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+    width: '100%',
+    alignSelf: 'center',
   },
   button: {
     backgroundColor: '#3a125d',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 18,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: '#3a125d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    width: '100%',
+    alignSelf: 'center',
   },
   buttonText: {
-    color: '#eceefc',
-    fontWeight: '600',
-    fontSize: 16,
+    color: '#fff',
+    fontSize: 20,
   },
   suggestionBox: {
     position: 'absolute',
@@ -287,27 +344,59 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e89d07',
     borderRadius: 8,
     maxHeight: 150,
     zIndex: 99,
+    width: '100%',
+    alignSelf: 'center',
   },
   suggestionItem: {
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f5deb3',
-    color: '#544d4d',
+    borderBottomColor: '#dfdedeff',
+    color: '#514f4fff',
   },
-  imageSection: {
-    justifyContent: 'center',
+  tourImageList: {
+    width: '90%',
+    marginTop: 18,
+    marginBottom: 10,
+    flexGrow: 0,
+    alignSelf: 'center',
+  },
+  tourCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 18,
+    marginHorizontal: 8,
     alignItems: 'center',
-    marginTop: 80,
-    marginBottom: 20,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    width: '100%',
+    alignSelf: 'center',
   },
-  image: {
-    width: '80%',
-    height: 180,
+  tourImage: {
+    width: '100%',
+    height: 160,
+    borderRadius: 12,
+    backgroundColor: '#eaeaea',
+  },
+  tourTitle: {
+    fontWeight: 'bold',
+    fontSize: 17,
+    color: '#3a125d',
+    marginTop: 10,
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  tourDesc: {
+    fontSize: 14,
+    color: '#544d4d',
+    textAlign: 'left',
+    marginBottom: 2,
   },
   swapIconWrapperBetween: {
     position: 'absolute',

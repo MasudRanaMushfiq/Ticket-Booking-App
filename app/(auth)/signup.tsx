@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link, router } from 'expo-router';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 
@@ -19,7 +19,7 @@ export default function SignUpScreen() {
     setSuccessMsg('');
 
     if (!fullName || !email || !password) {
-      setErrorMsg('Please fill in all fields.');
+      setErrorMsg('Please fill in all required fields.');
       return;
     }
 
@@ -29,10 +29,18 @@ export default function SignUpScreen() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Update displayName in Firebase Auth profile
+      await updateProfile(user, {
+        displayName: fullName,
+      });
+
+      // Save user data in Firestore with empty phone and gender fields
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         fullName,
         email,
+        phone: '',   // silently keep phone empty
+        gender: '',  // silently keep gender empty
         createdAt: serverTimestamp(),
         bookingIds: [],
       });
@@ -108,7 +116,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eceefc', // background color
+    backgroundColor: '#eceefc',
     justifyContent: 'center',
     padding: 24,
   },
@@ -116,27 +124,27 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#3a125d', // primary color
+    color: '#3a125d',
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 15,
     textAlign: 'center',
-    color: '#544d4d', // text color
+    color: '#544d4d',
     marginBottom: 25,
   },
   input: {
     height: 50,
-    borderColor: '#3a125d', // primary color border
+    borderColor: '#3a125d',
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 15,
     marginBottom: 15,
     backgroundColor: '#fff',
-    color: '#544d4d', // input text color
+    color: '#544d4d',
   },
   button: {
-    backgroundColor: '#3a125d', // primary color
+    backgroundColor: '#3a125d',
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -145,30 +153,30 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
-    backgroundColor: '#636060', // disabled color
+    backgroundColor: '#636060',
   },
   buttonText: {
-    color: '#eceefc', // background color for contrast
+    color: '#eceefc',
     fontSize: 17,
     fontWeight: '600',
   },
   linkText: {
     marginTop: 25,
     textAlign: 'center',
-    color: '#544d4d', // text color
+    color: '#544d4d',
   },
   link: {
-    color: '#e89d07', // secondary color
+    color: '#e89d07',
     fontWeight: 'bold',
   },
   errorText: {
-    color: '#b91c1c', // red error color
+    color: '#b91c1c',
     marginBottom: 12,
     fontWeight: '600',
     textAlign: 'center',
   },
   successText: {
-    color: '#3a6e00', // dark green tone (you can adjust)
+    color: '#3a6e00',
     marginBottom: 12,
     fontWeight: '600',
     textAlign: 'center',

@@ -11,6 +11,7 @@ export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showLogoutMsg, setShowLogoutMsg] = useState(false);
+  const [showLoginSuccessMsg, setShowLoginSuccessMsg] = useState(false); // New state for login success message
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -25,10 +26,16 @@ export default function SignInScreen() {
       setError('Please enter both email and password.');
       return;
     }
-    try {;;
+    try {
       await signInWithEmailAndPassword(auth, email, password);
       setError('');
-      router.replace({ pathname: '/home', params: { loggedIn: 'true' } });
+      setShowLoginSuccessMsg(true); // Show the success message
+
+      // Set a timeout to hide the message and then navigate
+      setTimeout(() => {
+        setShowLoginSuccessMsg(true); // Hide the message
+        router.replace({ pathname: '/home', params: { loggedIn: 'true' } });
+      }, 1000); // Display the success message for 2 seconds
     } catch (error: any) {
       setError(error.message);
     }
@@ -42,7 +49,13 @@ export default function SignInScreen() {
         </Text>
       )}
 
-      <Text style={styles.title}>Welcome Back</Text>
+      {showLoginSuccessMsg && ( // Conditionally render the success message
+        <Text style={styles.successMessage}>
+          Login successful! Redirecting...
+        </Text>
+      )}
+
+      <Text style={styles.title}>Welcome Here!</Text>
       <Text style={styles.subtitle}>Sign in to continue</Text>
 
       <TextInput
@@ -96,15 +109,30 @@ const styles = StyleSheet.create({
   },
   logoutMessage: {
     position: 'absolute',
-    top: 50,
-    left: 20,
-    right: 20,
-    backgroundColor: '#fde8b0', // lighter tone of secondary #e89d07
-    padding: 10,
-    borderRadius: 8,
-    color: '#7a5a00', // dark secondary shade
+    top: 100,
+    left: 50,
+    right: 50,
+    backgroundColor: '#feb8b8ff', // lighter tone of secondary #e89d07
+    paddingVertical: 18,
+    borderRadius: 18,
+    color: '#000000ff', // dark secondary shade
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 17,
+    fontWeight: '400',
+    zIndex: 10,
+    elevation: 10,
+  },
+  successMessage: { // New style for the login success message
+    position: 'absolute',
+    top: 100, // Adjusted position to avoid overlapping with logout message
+    left: 40,
+    right: 40,
+    backgroundColor: '#e2fde8ff', // Light green for success
+    paddingVertical: 18,
+    borderRadius: 16,
+    color: '#115b23ff', // Dark green text
+    textAlign: 'center',
+    fontSize: 18,
     zIndex: 10,
     elevation: 10,
   },

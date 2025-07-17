@@ -12,6 +12,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { collection, doc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { useRouter } from 'expo-router';
+import { Picker } from '@react-native-picker/picker';
 
 export default function AddBusScreen() {
   const router = useRouter();
@@ -22,11 +23,12 @@ export default function AddBusScreen() {
   const [departureTime, setDepartureTime] = useState('');
   const [price, setPrice] = useState('');
   const [totalSeats, setTotalSeats] = useState('');
+  const [acType, setAcType] = useState('Non_AC'); // New AC/Non_AC field default
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleAddBus = async () => {
-    if (!busName || !from || !to || !departureTime || !price || !totalSeats) {
+    if (!busName || !from || !to || !departureTime || !price || !totalSeats || !acType) {
       Alert.alert('Error', 'All fields are required.');
       return;
     }
@@ -46,6 +48,7 @@ export default function AddBusScreen() {
         departureTime: departureTime.trim(),
         price: Number(price),
         totalSeats: Number(totalSeats),
+        acType, // Save AC type
         bookedSeats: [],
       });
 
@@ -122,6 +125,19 @@ export default function AddBusScreen() {
         keyboardType="numeric"
         style={styles.input}
       />
+
+      {/* AC/Non_AC Picker */}
+      <View style={[styles.input, { paddingHorizontal: 0, justifyContent: 'center' }]}>
+        <Picker
+          selectedValue={acType}
+          onValueChange={(itemValue) => setAcType(itemValue)}
+          style={{ color: '#544d4d' }}
+          dropdownIconColor="#3a125d"
+        >
+          <Picker.Item label="Non AC" value="Non_AC" />
+          <Picker.Item label="AC" value="AC" />
+        </Picker>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleAddBus}>
         <Text style={styles.buttonText}>Add Bus</Text>

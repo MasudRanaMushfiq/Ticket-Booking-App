@@ -11,6 +11,7 @@ import {
 import { auth, db } from '../../firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'expo-router';
+import { Picker } from '@react-native-picker/picker';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -20,6 +21,8 @@ export default function EditProfileScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [createdAt, setCreatedAt] = useState('');
+  const [phone, setPhone] = useState('');
+  const [gender, setGender] = useState(''); // 'male', 'female', 'other'
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -35,7 +38,9 @@ export default function EditProfileScreen() {
           const data = userSnap.data();
           setName(data.fullName || '');
           setEmail(data.email || '');
-          setCreatedAt(data.createdAt?.toDate().toISOString().split('T')[0] || '');
+          setCreatedAt(data.createdAt?.toDate?.().toISOString().split('T')[0] || '');
+          setPhone(data.phone || '');
+          setGender(data.gender || '');
         }
       } catch (err) {
         if (err instanceof Error) {
@@ -66,10 +71,12 @@ export default function EditProfileScreen() {
       const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, {
         fullName: name,
+        phone,
+        gender,
       });
 
       Alert.alert('Success', 'Profile updated successfully');
-      router.back();
+      router.replace('/(tabs)/profile');  // Navigate to profile page
     } catch (err) {
       if (err instanceof Error) {
         Alert.alert('Update Failed', err.message);
@@ -106,6 +113,29 @@ export default function EditProfileScreen() {
         style={[styles.input, styles.readOnlyInput]}
       />
 
+      <Text style={styles.label}>Phone Number</Text>
+      <TextInput
+        value={phone}
+        onChangeText={setPhone}
+        keyboardType="phone-pad"
+        style={styles.input}
+        placeholder="Enter phone number"
+      />
+
+      <Text style={styles.label}>Gender</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={gender}
+          onValueChange={(itemValue) => setGender(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select gender" value="" />
+          <Picker.Item label="Male" value="male" />
+          <Picker.Item label="Female" value="female" />
+          <Picker.Item label="Other" value="other" />
+        </Picker>
+      </View>
+
       <TouchableOpacity onPress={handleUpdate} style={styles.button}>
         <Text style={styles.buttonText}>Update Profile</Text>
       </TouchableOpacity>
@@ -118,22 +148,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#eceefc', // background color from palette
+    backgroundColor: '#eceefc',
   },
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#eceefc', // background color
+    backgroundColor: '#eceefc',
   },
   label: {
     fontSize: 16,
-    color: '#544d4d', // text color from palette
+    color: '#544d4d',
     marginTop: 16,
     fontWeight: '600',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#636060', // disabled color for border
+    borderColor: '#636060',
     borderRadius: 8,
     padding: 12,
     marginTop: 8,
@@ -142,11 +172,22 @@ const styles = StyleSheet.create({
     color: '#544d4d',
   },
   readOnlyInput: {
-    backgroundColor: '#eceefc', // background color to indicate readonly
-    color: '#636060', // disabled text color
+    backgroundColor: '#eceefc',
+    color: '#636060',
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#636060',
+    borderRadius: 8,
+    marginTop: 8,
+    backgroundColor: '#fff',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
   },
   button: {
-    backgroundColor: '#3a125d', // primary color
+    backgroundColor: '#3a125d',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -154,7 +195,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonText: {
-    color: '#eceefc', // text color for button
+    color: '#eceefc',
     fontSize: 16,
     fontWeight: 'bold',
   },

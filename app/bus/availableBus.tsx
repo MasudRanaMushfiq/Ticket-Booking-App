@@ -7,10 +7,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { db } from '../../firebaseConfig';
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function AvailableBusScreen() {
   const { from, to, date } = useLocalSearchParams();
@@ -83,38 +85,85 @@ export default function AvailableBusScreen() {
         : 0;
 
     const isAvailable = item.totalSeats > bookedCount;
-    const availableSeats = item.totalSeats - bookedCount;
 
-    const displayDate = item.date?.toDate?.().toDateString?.() ?? 'Unknown Date';
+    const rawDate = item.date?.toDate?.();
+    const displayDate = rawDate
+      ? rawDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      : 'Unknown Date';
+
+    const startTime = item.departureTime;
+    const endHour = parseInt(startTime?.split(':')[0] || '0', 10) + 4;
+    const endTime = `${endHour < 10 ? '0' : ''}${endHour}:${startTime?.split(':')[1] || '00'}`;
+
+    // Determine AC or Non AC label
+    const acLabel = item.acType === 'AC' ? 'AC' : 'Non AC';
 
     return (
-      <View style={styles.busRow}>
-        <View style={styles.busInfo}>
-          <Text style={styles.busName}>{item.busName}</Text>
-          <Text style={styles.date}>Date: {displayDate}</Text>
-          <Text style={styles.departure}>Departure: {item.departureTime}</Text>
-          <Text style={styles.departure}>Price: ৳ {item.price}</Text>
+      <View style={styles.busCard}>
+        <View style={styles.topSection}>
+          <Image source={require('../../assets/images/bus1.png')} style={styles.busLogo} />
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.busName}>{item.busName}</Text>
+            <Text style={styles.subInfo}>
+              {acLabel} • {item.totalSeats} Seats
+            </Text>
+            <Text style={styles.dateText}>{displayDate}</Text>
+          </View>
+          <Text style={styles.price}>৳ {item.price}</Text>
         </View>
 
-        {isAvailable ? (
-          <TouchableOpacity
-            style={styles.availableButton}
-            onPress={() =>
-              router.push({
-                pathname: '/bus/availableseat',
-                params: {
-                  bus: JSON.stringify(item),
-                  busId: item.id,
-                  date: date as string,
-                },
-              })
-            }
-          >
-            <Text style={styles.availableButtonText}>{availableSeats} seats</Text>
-          </TouchableOpacity>
-        ) : (
-          <Text style={[styles.seats, styles.fullSeats]}>Full</Text>
-        )}
+        <View style={styles.middleSection}>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={styles.location}>{from}</Text>
+            <Text style={styles.time}>{startTime}</Text>
+          </View>
+          <View style={styles.dotsContainer}>
+            {[...Array(7)].map((_, i) => (
+              <View key={`dot1-${i}`} style={styles.dot} />
+            ))}
+            <FontAwesome
+              name="bus"
+              size={20}
+              color="#3a125d"
+              style={{ marginHorizontal: 8 }}
+            />
+            {[...Array(7)].map((_, i) => (
+              <View key={`dot2-${i}`} style={styles.dot} />
+            ))}
+          </View>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={styles.location}>{to}</Text>
+            <Text style={styles.time}>{endTime}</Text>
+          </View>
+        </View>
+
+        <View style={styles.tear} />
+
+        <View style={styles.bottomSection}>
+          <Text style={styles.review}>★★★ 4.5</Text>
+          <Text style={styles.policy}>View Policy</Text>
+          {isAvailable ? (
+            <TouchableOpacity
+              style={styles.bookBtn}
+              onPress={() =>
+                router.push({
+                  pathname: '/bus/availableseat',
+                  params: {
+                    bus: JSON.stringify(item),
+                    busId: item.id,
+                    date: item.date?.toDate?.().toISOString() || '',
+                    time: item.departureTime || '',
+                    acType: item.acType || 'Non AC', // <-- Send acType in route
+                  },
+                })
+              }
+            >
+              <Text style={styles.bookBtnText}>Book Seat</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={[styles.bookBtnText, { color: '#DC2626' }]}>Full</Text>
+          )}
+        </View>
       </View>
     );
   };
@@ -129,19 +178,14 @@ export default function AvailableBusScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
-      <Text style={styles.title}>
-        {from} → {to} on {new Date(date as string).toDateString()}
-      </Text>
-
       {sameDayBuses.length > 0 ? (
-        <View style={styles.firstSectionCard}>
-          <Text style={styles.sectionTitle}>Available Buses for Selected Date</Text>
+        <View>
           <FlatList
             data={sameDayBuses}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            ItemSeparatorComponent={() => <View style={{ height: 18 }} />}
           />
         </View>
       ) : (
@@ -149,14 +193,14 @@ export default function AvailableBusScreen() {
       )}
 
       {futureBuses.length > 0 && (
-        <View style={styles.futureSection}>
-          <Text style={styles.sectionTitle}>Upcoming Buses After This Date</Text>
+        <View style={{ marginTop: 30 }}>
+          <Text style={styles.sectionTitle}>Upcoming Buses</Text>
           <FlatList
             data={futureBuses}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            ItemSeparatorComponent={() => <View style={{ height: 18 }} />}
           />
         </View>
       )}
@@ -167,8 +211,8 @@ export default function AvailableBusScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eceefc', // Background color from your palette
-    paddingHorizontal: 20,
+    backgroundColor: '#eceefc',
+    paddingHorizontal: 16,
     paddingTop: 20,
   },
   center: {
@@ -176,86 +220,113 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 18,
-    color: '#3a125d', // Primary color
-    textAlign: 'center',
-  },
-  firstSectionCard: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  futureSection: {
-    marginTop: 28,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#544d4d', // Text color
-    marginBottom: 14,
+    color: '#3a125d',
+    marginBottom: 10,
   },
   noBus: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#636060', // Disabled color
+    color: '#636060',
     marginTop: 20,
-    fontStyle: 'italic',
   },
-  busRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#e9e6fa', // very light shade of primary (#3a125d) for subtle highlight
+  busCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
     padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    elevation: 1,
     shadowColor: '#000',
     shadowOpacity: 0.05,
+    shadowRadius: 4,
     shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
   },
-  busInfo: {
-    flexShrink: 1,
+  topSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  busLogo: {
+    width: 80,
+    height: 80,
+    resizeMode: 'contain',
   },
   busName: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#3a125d', // primary color for emphasis
-    marginBottom: 4,
+    color: '#3a125d',
   },
-  departure: {
-    fontSize: 14,
-    color: '#544d4d', // text color
+  subInfo: {
+    fontSize: 13,
+    color: '#544d4d',
+    marginTop: 2,
   },
-  date: {
-    fontSize: 14,
-    color: '#544d4d', // primary color
-  },
-  seats: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  fullSeats: {
-    color: '#DC2626', // red for full seats
-  },
-  availableButton: {
-    backgroundColor: '#e89d07', // secondary color
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  availableButtonText: {
-    color: '#eceefc', // background color for contrast
-    fontWeight: '700',
+  dateText: {
     fontSize: 15,
+    color: '#e89d07',
+    marginTop: 4,
+  },
+  price: {
+    color: 'green',
+    fontWeight: '700',
+    fontSize: 22,
+    marginRight: 20,
+  },
+  middleSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 5,
+    marginHorizontal: 10,
+  },
+  location: {
+    fontWeight: '600',
+    color: '#3a125d',
+  },
+  time: {
+    color: '#544d4d',
+    fontSize: 13,
+    marginTop: 4,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#3a125d',
+    marginHorizontal: 2,
+  },
+  tear: {
+    height: 1,
+    borderStyle: 'dashed',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    marginVertical: 12,
+  },
+  bottomSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  review: {
+    fontSize: 15,
+    color: '#e89d07',
+  },
+  policy: {
+    fontSize: 13,
+    color: '#544d4d',
+  },
+  bookBtn: {
+    backgroundColor: '#e89d07',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+  },
+  bookBtnText: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });

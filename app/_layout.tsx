@@ -9,7 +9,7 @@ export default function Layout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
       <Stack.Screen name="admin" options={{ headerShown: false }}/>
       <Stack.Screen name="bus" options={{ headerShown: false }}/>
-      <Stack.Screen name="ticket/confirm" options={{ headerShown: false }}/>
+      <Stack.Screen name="ticket" options={{ headerShown: false }}/>
       <Stack.Screen name="ticket/ticketHistory" options={{ headerShown: false }}/>
     </Stack>
   );

@@ -58,11 +58,10 @@ export default function AllBusScreen() {
           <Text style={styles.info}>Departure: {item.departureTime}</Text>
           <Text style={styles.info}>Date: {item.date.toDate().toDateString()}</Text>
           <Text style={styles.info}>Price: ৳{item.price}</Text>
-          <Text style={styles.info}>Seats: {item.totalSeats} total</Text>
 
-          {/* Booked & Delete Inline */}
+          {/* Seats & Delete aligned horizontally */}
           <View style={styles.rowBetween}>
-            <Text style={styles.booked}>Booked: {item.bookedSeats}</Text>
+            <Text style={styles.info}>Seats: {item.totalSeats} total</Text>
             <TouchableOpacity
               style={styles.deleteButtonInline}
               onPress={() =>
@@ -79,6 +78,9 @@ export default function AllBusScreen() {
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Booked below */}
+          <Text style={styles.booked}>Booked: {item.bookedSeats}</Text>
         </View>
       </View>
     );
@@ -124,8 +126,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successMsg: {
-    backgroundColor: '#e89d07', // Secondary Color as background for success message
-    color: '#3a125d', // Primary Color text for contrast
+    backgroundColor: '#e89d07', // Secondary Color
+    color: '#3a125d', // Primary Text
     padding: 10,
     borderRadius: 8,
     textAlign: 'center',
@@ -138,12 +140,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 40,
     textAlign: 'center',
-    color: '#3a125d', // Primary Color for title
+    color: '#3a125d', // Primary Color
   },
   noBus: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#636060', // Disable Color for less emphasis
+    color: '#636060', // Disabled Color
     marginTop: 50,
   },
   busCard: {
@@ -152,7 +154,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 12,
-    // Optional subtle shadow for iOS & Android:
     shadowColor: '#3a125d',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -162,16 +163,17 @@ const styles = StyleSheet.create({
   busName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#3a125d', // Primary Color
+    color: '#3a125d',
   },
   info: {
     fontSize: 14,
-    color: '#544d4d', // Text Color
+    color: '#544d4d',
     marginTop: 4,
   },
   booked: {
     fontSize: 14,
-    color: '#544d4d', // Text Color
+    color: '#544d4d',
+    marginTop: 6,
   },
   rowBetween: {
     flexDirection: 'row',
@@ -180,13 +182,13 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   deleteButtonInline: {
-    backgroundColor: '#e89d07', // Secondary Color
+    backgroundColor: '#e89d07',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
   },
   deleteText: {
-    color: '#3a125d', // Primary Color text on secondary background
+    color: '#3a125d',
     fontWeight: '900',
   },
 });

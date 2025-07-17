@@ -23,7 +23,7 @@ interface Booking {
 
 export default function TicketHistory() {
   const router = useRouter();
-  const [bookings, setBookings] = useState<(Booking & { busName?: string })[]>([]);
+  const [bookings, setBookings] = useState<(Booking & { busName?: string; acType?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -39,27 +39,29 @@ export default function TicketHistory() {
         const userRef = doc(db, 'users', user.uid);
         const bookingSnapshot = await getDocs(collection(userRef, 'bookings'));
 
-        const busNameCache: Record<string, string> = {};
-        const userBookings: (Booking & { busName?: string })[] = [];
+        const busInfoCache: Record<string, { busName: string; acType: string }> = {};
+        const userBookings: (Booking & { busName?: string; acType?: string })[] = [];
 
         for (const docSnap of bookingSnapshot.docs) {
           const booking = { id: docSnap.id, ...docSnap.data() } as Booking;
           let busName = '';
+          let acType = '';
 
           if (booking.busId) {
-            if (busNameCache[booking.busId]) {
-              busName = busNameCache[booking.busId];
+            if (busInfoCache[booking.busId]) {
+              ({ busName, acType } = busInfoCache[booking.busId]);
             } else {
               const busDoc = await getDoc(doc(db, 'buses', booking.busId));
               if (busDoc.exists()) {
                 const busData = busDoc.data();
                 busName = busData.busName || '';
-                busNameCache[booking.busId] = busName;
+                acType = busData.acType || '';
+                busInfoCache[booking.busId] = { busName, acType };
               }
             }
           }
 
-          userBookings.push({ ...booking, busName });
+          userBookings.push({ ...booking, busName, acType });
         }
 
         setBookings(userBookings);
@@ -93,23 +95,27 @@ export default function TicketHistory() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const passedBookings = bookings.filter(
-    (ticket) => ticket.date.toDate() < today
-  );
-  const upcomingBookings = bookings.filter(
-    (ticket) => ticket.date.toDate() >= today
-  );
+  const passedBookings = bookings.filter((ticket) => ticket.date.toDate() < today);
+  const upcomingBookings = bookings.filter((ticket) => ticket.date.toDate() >= today);
+
+  const formatFullDateTime = (date: Date) =>
+    date.toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Purple Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Ticket History</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
-
-        {/* Upcoming Tickets Section */}
         <Text style={styles.sectionTitle}>Upcoming</Text>
         {upcomingBookings.length === 0 ? (
           <Text style={styles.noTicket}>No upcoming tickets.</Text>
@@ -119,21 +125,18 @@ export default function TicketHistory() {
               <Text style={styles.route}>
                 {ticket.from} → {ticket.to}
               </Text>
-              {ticket.busName ? (
-                <Text style={styles.busName}>Bus: {ticket.busName}</Text>
-              ) : (
-                <Text style={styles.busName}>Bus: Unknown</Text>
-              )}
+              <Text style={styles.busName}>
+                Bus: {ticket.busName || 'Unknown'} ({ticket.acType || 'Type Unknown'})
+              </Text>
               <Text style={styles.detail}>Seat: {ticket.seat}</Text>
               <Text style={styles.detail}>
-                Date: {ticket.date.toDate().toDateString()}
+                Date: {formatFullDateTime(ticket.date.toDate())}
               </Text>
               <Text style={styles.detail}>Price: ৳ {ticket.price}</Text>
             </View>
           ))
         )}
 
-        {/* Passed Tickets Section */}
         <Text style={styles.sectionTitle}>Passed</Text>
         {passedBookings.length === 0 ? (
           <Text style={styles.noTicket}>No passed tickets.</Text>
@@ -143,14 +146,12 @@ export default function TicketHistory() {
               <Text style={styles.route}>
                 {ticket.from} → {ticket.to}
               </Text>
-              {ticket.busName ? (
-                <Text style={styles.busName}>Bus: {ticket.busName}</Text>
-              ) : (
-                <Text style={styles.busName}>Bus: Unknown</Text>
-              )}
+              <Text style={styles.busName}>
+                Bus: {ticket.busName || 'Unknown'} ({ticket.acType || 'Type Unknown'})
+              </Text>
               <Text style={styles.detail}>Seat: {ticket.seat}</Text>
               <Text style={styles.detail}>
-                Date: {ticket.date.toDate().toDateString()}
+                Date: {formatFullDateTime(ticket.date.toDate())}
               </Text>
               <Text style={styles.detail}>Price: ৳ {ticket.price}</Text>
             </View>
@@ -165,10 +166,10 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingTop: 35,
-    backgroundColor: '#eceefc', // background color from palette
+    backgroundColor: '#eceefc',
   },
   header: {
-    backgroundColor: '#3a125d', // purple primary color
+    backgroundColor: '#3a125d',
     paddingVertical: 15,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -182,18 +183,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 50,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginTop: 40,
-    color: '#3a125d', // primary color
-  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     marginTop: 20,
     marginBottom: 12,
-    color: '#544d4d', // text color
+    color: '#544d4d',
   },
   ticketCard: {
     backgroundColor: '#fff',
@@ -209,22 +204,22 @@ const styles = StyleSheet.create({
   route: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#3a125d', // primary color for route
+    color: '#3a125d',
     marginBottom: 6,
   },
   busName: {
     fontSize: 15,
-    color: '#544d4d', // text color
+    color: '#544d4d',
     marginBottom: 4,
   },
   detail: {
     fontSize: 14,
-    color: '#636060', // disabled color
+    color: '#636060',
     marginBottom: 2,
   },
   noTicket: {
     fontSize: 16,
-    color: '#64748b', // lighter text
+    color: '#64748b',
     textAlign: 'center',
     marginTop: 10,
     marginBottom: 10,

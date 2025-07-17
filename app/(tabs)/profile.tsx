@@ -18,9 +18,11 @@ interface UserData {
   fullName: string;
   email: string;
   createdAt: Timestamp;
+  phone?: string;
+  gender?: string;
 }
 
-const ADMIN_UID = '9IXmZvX1ZyR1zgdcczjb6fiJxyx2';
+const ADMIN_UID = 'CtKI7N2H7uYdmdUC62eOt89dmGY2';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -111,6 +113,15 @@ export default function ProfileScreen() {
                 {userInfo?.fullName || 'Unnamed User'}
               </Text>
               <Text style={styles.email}>{userInfo?.email}</Text>
+
+              {/* New phone and gender fields */}
+              <Text style={styles.infoText}>
+                Phone: {userInfo?.phone || 'Not set'}
+              </Text>
+              <Text style={styles.infoText}>
+                Gender: {userInfo?.gender ? userInfo.gender.charAt(0).toUpperCase() + userInfo.gender.slice(1) : 'Not set'}
+              </Text>
+
               <Text style={styles.joined}>
                 Joined:{' '}
                 {userInfo?.createdAt
@@ -206,6 +217,12 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   email: {
+    fontSize: 15,
+    color: '#544d4d',
+    marginBottom: 2,
+    marginLeft: 5,
+  },
+  infoText: {
     fontSize: 15,
     color: '#544d4d',
     marginBottom: 2,

@@ -5,90 +5,70 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Alert,
-  TextInput,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { auth, db } from '../../firebaseConfig';
-import {
-  doc,
-  addDoc,
-  updateDoc,
-  arrayUnion,
-  collection,
-  serverTimestamp,
-} from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function ConfirmScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
-  const { from, to, date, seatLabel, price, busId } = params;
+  const { from, to, date, seatLabels: seatLabelsRaw, price, busId, busName, acType } = params;
 
-  const [userName, setUserName] = useState('Loading...');
-  const [transactionId, setTransactionId] = useState('');
-  const user = auth.currentUser;
+  const [fullName, setFullName] = useState('You');
+
+  let seatLabels: string[] = [];
+  try {
+    seatLabels = seatLabelsRaw ? JSON.parse(seatLabelsRaw as string) : [];
+  } catch {
+    seatLabels = [];
+  }
 
   useEffect(() => {
-    if (user) {
-      setUserName(user.displayName || 'You');
-    } else {
-      setUserName('You');
+    async function fetchUserFullName() {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          if (userDocSnap.exists()) {
+            const data = userDocSnap.data();
+            if (data.fullName) {
+              setFullName(data.fullName);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching user fullName:', error);
+        }
+      }
     }
-  }, [user]);
+    fetchUserFullName();
+  }, []);
 
-  const handleBackHome = async () => {
-    try {
-      if (!user) throw new Error('User not logged in');
-      if (!busId || typeof busId !== 'string') {
-        Alert.alert('Error', 'Bus ID is missing or invalid.');
-        return;
-      }
-      if (!seatLabel || typeof seatLabel !== 'string') {
-        Alert.alert('Error', 'Seat is missing or invalid.');
-        return;
-      }
-      if (!transactionId.trim()) {
-        Alert.alert('Error', 'Please enter a valid transaction ID.');
-        return;
-      }
+  const handlePayment = () => {
+    const totalPrice = Number(price) * seatLabels.length;
 
-      const bookingData = {
+    router.push({
+      pathname: '/payment/payment',
+      params: {
         from,
         to,
-        date: date ? new Date(date as string) : null,
-        seat: seatLabel,
-        price: price ? Number(price) : 0,
+        date,
         busId,
-        transactionId,
-        createdAt: serverTimestamp(),
-      };
-
-      const userRef = doc(db, 'users', user.uid);
-      const bookingsRef = collection(userRef, 'bookings');
-
-      // Add booking to user's subcollection
-      const bookingDocRef = await addDoc(bookingsRef, bookingData);
-      const bookingId = bookingDocRef.id;
-
-      // Add booking ID to user's array
-      await updateDoc(userRef, {
-        bookingIds: arrayUnion(bookingId),
-      });
-
-      // Update the bus's bookedSeats list
-      const busRef = doc(db, 'buses', busId);
-      await updateDoc(busRef, {
-        bookedSeats: arrayUnion(seatLabel),
-      });
-
-      Alert.alert('Success', 'Your ticket is confirmed!');
-      router.replace('/home');
-    } catch (err: any) {
-      console.error('Booking error:', err);
-      Alert.alert('Error', err.message || 'Something went wrong');
-    }
+        busName,
+        acType: acType || 'Non AC', // ✅ Send AC type forward
+        seatLabels: JSON.stringify(seatLabels),
+        passengerNames: JSON.stringify([fullName]),
+        totalPrice: totalPrice.toString(),
+      },
+    });
   };
 
   if (!busId || typeof busId !== 'string') {
@@ -102,143 +82,186 @@ export default function ConfirmScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.ticketCard}>
-        <View style={styles.header}>
-          <Ionicons name="bus" size={40} color="#e89d07" />
-          <Text style={styles.title}>Bus Ticket Receipt</Text>
-        </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
+        >
+          <ScrollView keyboardShouldPersistTaps="always" contentContainerStyle={{ paddingBottom: 40 }}>
+            <View style={styles.card}>
+              {/* User Info */}
+              <View style={styles.topSection}>
+                <Ionicons name="person-circle-outline" size={48} color="#3a125d" />
+                <View style={styles.passengerInfo}>
+                  <Text style={styles.label}>Name:</Text>
+                  <Text style={styles.userName}>{fullName}</Text>
+                </View>
+              </View>
 
-        <View style={styles.divider} />
+              {/* Solid Line */}
+              <View style={styles.solidLine} />
 
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Passenger</Text>
-          <Text style={styles.value}>{userName}</Text>
-        </View>
+              {/* Booked Seat Info */}
+              <View style={styles.seatContainer}>
+                <Text style={styles.label}>Booked Seat:</Text>
+                <View style={styles.seatWrap}>
+                  {seatLabels.map((seat) => (
+                    <View key={seat} style={styles.seatBox}>
+                      <Text style={styles.seatText}>{seat}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>From</Text>
-          <Text style={styles.value}>{from}</Text>
-        </View>
+              {/* Solid Line */}
+              <View style={styles.solidLine} />
 
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>To</Text>
-          <Text style={styles.value}>{to}</Text>
-        </View>
+              {/* Bus Info */}
+              <View style={styles.bottomSection}>
+                <View style={styles.infoRow}>
+                  <Ionicons name="bus" size={24} color="#e89d07" style={styles.icon} />
+                  <Text style={styles.infoText}>{busName || 'Bus Name'}</Text>
+                </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Date</Text>
-          <Text style={styles.value}>
-            {date ? new Date(date as string).toDateString() : 'N/A'}
-          </Text>
-        </View>
+                <View style={styles.infoRow}>
+                  <MaterialCommunityIcons
+                    name="calendar-clock"
+                    size={24}
+                    color="#3a125d"
+                    style={styles.icon}
+                  />
+                  <Text style={styles.infoText}>
+                    {date
+                      ? new Date(date as string).toLocaleDateString('en-BD', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : 'N/A'}
+                  </Text>
+                </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Seat</Text>
-          <Text style={styles.value}>{seatLabel}</Text>
-        </View>
+                <View style={styles.infoRow}>
+                  <Ionicons name="snow-outline" size={24} color="#0093e9" style={styles.icon} />
+                  <Text style={styles.infoText}>
+                    {acType?.toString().toUpperCase() === 'AC' ? 'AC Bus' : 'Non-AC Bus'}
+                  </Text>
+                </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Price</Text>
-          <Text style={styles.value}>৳ {price}</Text>
-        </View>
+                <View style={styles.infoRow}>
+                  <Ionicons name="cash" size={24} color="#0c893aff" style={styles.icon} />
+                  <Text style={styles.infoText}>Price per seat: ৳ {price}</Text>
+                </View>
 
-        {/* Transaction ID Input */}
-        <TextInput
-          placeholder="Enter Transaction ID"
-          style={styles.input}
-          value={transactionId}
-          onChangeText={setTransactionId}
-          placeholderTextColor="#636060"
-        />
+                <View style={styles.infoRow}>
+                  <Ionicons name="cash" size={24} color="#3a125d" style={styles.icon} />
+                  <Text style={[styles.infoText, { fontWeight: '800', fontSize: 20 }]}>
+                    Total Price: ৳ {Number(price) * seatLabels.length}
+                  </Text>
+                </View>
+              </View>
+            </View>
 
-        <View style={styles.divider} />
-        <Text style={styles.thankYou}>Thank you for booking!</Text>
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={handleBackHome}>
-        <Text style={styles.buttonText}>Confirm & Back to Home</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+            {/* Continue Button */}
+            <TouchableOpacity style={styles.button} onPress={handlePayment}>
+              <Text style={styles.buttonText}>Continue Purchase</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eceefc', // background color from your palette
+    backgroundColor: '#eceefc',
     padding: 24,
-    justifyContent: 'center',
   },
-  ticketCard: {
+  card: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 24,
-    marginHorizontal: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 25,
+    marginBottom: 30,
     elevation: 5,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
-  header: {
+  topSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 18,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginLeft: 12,
-    color: '#3a125d', // primary color for title
-  },
-  divider: {
-    borderBottomColor: '#e89d07', // secondary color for divider
-    borderBottomWidth: 2,
-    marginVertical: 10,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
+  passengerInfo: {
+    marginLeft: 15,
+    flex: 1,
   },
   label: {
-    fontSize: 18,
-    color: '#544d4d', // text color
+    fontSize: 16,
+    color: '#636060',
     fontWeight: '600',
+    marginBottom: 6,
   },
-  value: {
+  userName: {
     fontSize: 18,
-    color: '#3a125d', // primary color for values
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#3a125d',
   },
-  input: {
+  solidLine: {
+    height: 1,
+    backgroundColor: '#3a125d',
+    marginVertical: 20,
+  },
+  seatContainer: {
+    marginBottom: 10,
+  },
+  seatWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  seatBox: {
+    backgroundColor: '#3a125d10',
+    borderColor: '#3a125d',
     borderWidth: 1,
-    borderColor: '#636060', // disabled color used for placeholder
     borderRadius: 10,
-    padding: 12,
-    marginTop: 12,
-    fontSize: 16,
-    color: '#544d4d',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 10,
+    marginBottom: 10,
   },
-  thankYou: {
-    textAlign: 'center',
+  seatText: {
     fontSize: 16,
-    color: '#e89d07', // secondary color
+    color: '#3a125d',
     fontWeight: '600',
-    marginTop: 12,
+  },
+  bottomSection: {},
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  icon: {
+    marginRight: 15,
+  },
+  infoText: {
+    fontSize: 18,
+    color: '#3a125d',
+    fontWeight: '600',
   },
   button: {
-    marginHorizontal: 20,
-    marginVertical: 30,
-    backgroundColor: '#3a125d', // primary color
+    backgroundColor: '#3a125d',
     paddingVertical: 16,
     borderRadius: 15,
     alignItems: 'center',
     elevation: 3,
   },
   buttonText: {
-    color: '#eceefc', // background color for contrast
+    color: '#eceefc',
     fontSize: 18,
     fontWeight: '700',
   },
