@@ -12,7 +12,17 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { doc, getDoc } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  collection,
+  onSnapshot,
+  runTransaction,
+  deleteDoc,
+  serverTimestamp,
+  getDocs,
+} from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { db } from '../../firebaseConfig';
 
 interface Seat {
@@ -27,23 +37,24 @@ export default function AvailableSeatScreen() {
   const busId = params.busId as string;
   const passedDate = params.date as string | undefined;
 
+  const auth = getAuth();
+  const currentUserId = auth.currentUser?.uid;
+
   const [loading, setLoading] = useState(true);
   const [bus, setBus] = useState<any>(null);
   const [bookedSeats, setBookedSeats] = useState<number[]>([]);
+  const [lockedSeats, setLockedSeats] = useState<string[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
 
-  // Rows for seat labels
   const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-
-  // Use totalSeats dynamically, fallback to 32 if bus data not loaded yet
   const totalSeats = bus?.totalSeats ?? 32;
 
-  // Generate seats based on totalSeats dynamically
   const seats: Seat[] = Array.from({ length: totalSeats }, (_, i) => ({
     id: i + 1,
     label: rows[Math.floor(i / 4)] + ((i % 4) + 1),
   }));
 
+  // Fetch bus info and booked seats
   useEffect(() => {
     const fetchBus = async () => {
       try {
@@ -58,7 +69,6 @@ export default function AvailableSeatScreen() {
             ? busData.bookedSeats
             : [];
 
-          // Convert booked seat labels to seat IDs (based on seats array)
           const bookedSeatIds = seats
             .filter((s) => booked.includes(s.label))
             .map((s) => s.id);
@@ -75,52 +85,143 @@ export default function AvailableSeatScreen() {
     };
 
     if (busId) fetchBus();
-  }, []);
+  }, [busId]);
 
-  const handleSeatPress = (seatId: number) => {
+  // Listen to locked seats realtime updates
+  useEffect(() => {
+    if (!busId) return;
+
+    const lockedSeatsRef = collection(db, 'buses', busId, 'lockedSeats');
+    const unsubscribe = onSnapshot(lockedSeatsRef, (snapshot) => {
+      const locked = snapshot.docs.map(doc => doc.id);
+      setLockedSeats(locked);
+    });
+
+    return () => unsubscribe();
+  }, [busId]);
+
+  // Cleanup function to free all locked seats after 2 minutes
+  useEffect(() => {
+    if (!busId) return;
+
+    const timeout = setTimeout(async () => {
+      const lockedSeatsRef = collection(db, 'buses', busId, 'lockedSeats');
+      const snapshot = await getDocs(lockedSeatsRef);
+
+      for (const docSnap of snapshot.docs) {
+        await deleteDoc(docSnap.ref);
+      }
+    }, 500); // 1 minutes in milliseconds
+
+    return () => clearTimeout(timeout);
+  }, [busId]);
+
+  // Lock a seat in Firestore
+  const lockSeat = async (seatLabel: string) => {
+    if (!busId || !currentUserId) return false;
+
+    const seatLockRef = doc(db, 'buses', busId, 'lockedSeats', seatLabel);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const lockDoc = await transaction.get(seatLockRef);
+        if (lockDoc.exists()) throw new Error('Seat already locked');
+        transaction.set(seatLockRef, {
+          lockedBy: currentUserId,
+          timestamp: serverTimestamp(),
+        });
+      });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Unlock a seat in Firestore
+  const unlockSeat = async (seatLabel: string) => {
+    if (!busId) return;
+
+    const seatLockRef = doc(db, 'buses', busId, 'lockedSeats', seatLabel);
+    try {
+      await deleteDoc(seatLockRef);
+    } catch (err) {
+      console.error('Error unlocking seat:', err);
+    }
+  };
+
+  // Unlock all selected seats (call on confirm or exit)
+  const unlockAllSelectedSeats = async () => {
+    for (const seatId of selectedSeats) {
+      const seatLabel = seats.find(s => s.id === seatId)?.label;
+      if (seatLabel) {
+        await unlockSeat(seatLabel);
+      }
+    }
+  };
+
+  // Handle seat press: lock/unlock seat in Firestore accordingly
+  const handleSeatPress = async (seatId: number) => {
+    if (!currentUserId) {
+      Alert.alert('Not Logged In', 'Please login to select seats.');
+      return;
+    }
+
+    const seatLabel = seats.find(s => s.id === seatId)?.label;
+    if (!seatLabel) return;
+
     if (selectedSeats.includes(seatId)) {
-      // Deselect seat
+      await unlockSeat(seatLabel);
       setSelectedSeats(selectedSeats.filter((id) => id !== seatId));
     } else {
-      // Select seat only if less than 4 already selected
       if (selectedSeats.length < 4) {
-        setSelectedSeats([...selectedSeats, seatId]);
+        const locked = await lockSeat(seatLabel);
+        if (locked) {
+          setSelectedSeats([...selectedSeats, seatId]);
+        } else {
+          Alert.alert(
+            'Seat Locked',
+            `Sorry, seat ${seatLabel} is already locked or booked.`,
+          );
+        }
       } else {
         Alert.alert('Limit reached', 'You can select up to 4 seats only.');
       }
     }
   };
 
-  const handleConfirm = () => {
-    if (selectedSeats.length > 0) {
-      const seatLabels = selectedSeats
-        .map((id) => seats.find((s) => s.id === id)?.label)
-        .filter(Boolean);
+  // Confirm booking: unlock all selected seats and navigate to confirm screen
+  const handleConfirm = async () => {
+    if (selectedSeats.length === 0) return;
 
-      router.push({
-        pathname: '/ticket/confirm',
-        params: {
-          from: bus?.from || '',
-          to: bus?.to || '',
-          date: passedDate || bus?.date?.toDate?.().toISOString() || '',
-          time: bus?.departureTime || '',
-          seatLabels: JSON.stringify(seatLabels),
-          price: (bus?.price || '').toString(),
-          busId,
-          busName: bus?.busName || '',
-          acType: bus?.acType || 'Non AC', // ✅ Added AC/Non-AC info
-        },
-      });
+    const seatLabels = selectedSeats
+      .map((id) => seats.find((s) => s.id === id)?.label)
+      .filter(Boolean);
 
+    // Unlock seats now (or after booking confirmation in next screen)
+    await unlockAllSelectedSeats();
+    setSelectedSeats([]);
 
-      setSelectedSeats([]);
-    }
+    router.push({
+      pathname: '/ticket/confirm',
+      params: {
+        from: bus?.from || '',
+        to: bus?.to || '',
+        date: passedDate || bus?.date?.toDate?.().toISOString() || '',
+        time: bus?.departureTime || '',
+        seatLabels: JSON.stringify(seatLabels),
+        price: (bus?.price || '').toString(),
+        busId,
+        busName: bus?.busName || '',
+        acType: bus?.acType || 'Non AC',
+      },
+    });
   };
 
   const renderSeat = ({ item, index }: { item: Seat; index: number }) => {
     const isAisle = (index + 1) % 4 === 2;
     const isBooked = bookedSeats.includes(item.id);
     const isSelected = selectedSeats.includes(item.id);
+    const isLocked = lockedSeats.includes(item.label);
 
     return (
       <View style={[styles.seatWrapper, isAisle && { marginRight: 30 }]}>
@@ -129,11 +230,13 @@ export default function AvailableSeatScreen() {
             styles.seat,
             isBooked
               ? styles.booked
+              : isLocked
+              ? styles.locked
               : isSelected
               ? styles.selectedSeat
               : styles.available,
           ]}
-          disabled={isBooked}
+          disabled={isBooked || isLocked}
           onPress={() => handleSeatPress(item.id)}
           activeOpacity={0.7}
         >
@@ -151,13 +254,8 @@ export default function AvailableSeatScreen() {
     );
   }
 
-  // Format start time display
   const startTime = bus?.departureTime || 'Unknown';
-
-  // Calculate available seats count dynamically
   const availableSeatsCount = (bus?.totalSeats ?? 0) - bookedSeats.length;
-
-  // Determine AC / Non-AC label (default Non-AC)
   const acLabel = bus?.acType === 'AC' ? 'AC' : 'Non-AC';
 
   return (
@@ -166,7 +264,7 @@ export default function AvailableSeatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}
       >
-        {/* Top card */}
+        {/* Card */}
         <View style={styles.card}>
           <View style={styles.cardTop}>
             <Text style={styles.busName}>{bus?.busName || 'Bus'}</Text>
@@ -182,7 +280,7 @@ export default function AvailableSeatScreen() {
           </View>
         </View>
 
-        {/* Bus seats layout */}
+        {/* Seat Grid */}
         <View style={styles.busContainer}>
           <View style={styles.busBody}>
             <FlatList
@@ -196,7 +294,23 @@ export default function AvailableSeatScreen() {
           </View>
         </View>
 
-        {/* Confirm button */}
+        {/* Color Suggestion Legend */}
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendBox, { backgroundColor: '#16A34A' }]} />
+            <Text>Available</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendBox, { backgroundColor: '#3B82F6' }]} />
+            <Text>Selected</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendBox, { backgroundColor: '#9f9f9fff' }]} />
+            <Text>Booked</Text>
+          </View>
+        </View>
+
+        {/* Confirm Button */}
         {selectedSeats.length > 0 && (
           <View style={styles.confirmButtonWrapper}>
             <TouchableOpacity
@@ -258,13 +372,13 @@ const styles = StyleSheet.create({
   },
   typeSeats: {
     fontSize: 14,
-    color: '#475569',
+    color: '#e89d07',
     fontWeight: '700',
   },
   price: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#0c893aff',
+    color: '#000',
   },
   busContainer: {
     backgroundColor: '#e0f2fe',
@@ -299,17 +413,20 @@ const styles = StyleSheet.create({
   selectedSeat: {
     backgroundColor: '#3B82F6',
   },
+  locked: {
+    backgroundColor: '#f59e0b', // orange
+  },
+  booked: {
+    backgroundColor: '#9f9f9fff', // gray
+  },
   seatText: {
     fontSize: 18,
     color: '#fff',
     fontWeight: '600',
   },
-  booked: {
-    backgroundColor: '#9f9f9fff',
-  },
   confirmButtonWrapper: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 30,
     left: 50,
     right: 50,
     borderRadius: 30,
@@ -329,5 +446,21 @@ const styles = StyleSheet.create({
   confirmSeatLabel: {
     color: '#facc15',
     fontWeight: '700',
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 15,
+    gap: 22,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendBox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
   },
 });

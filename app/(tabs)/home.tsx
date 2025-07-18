@@ -34,24 +34,10 @@ export default function HomeScreen() {
   const [to, setTo] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  // Removed: const [showSuccessMsg, setShowSuccessMsg] = useState(false); // This state is no longer needed
 
   const [fromSuggestions, setFromSuggestions] = useState<string[]>([]);
   const [toSuggestions, setToSuggestions] = useState<string[]>([]);
   const [activeInput, setActiveInput] = useState<'from' | 'to' | null>(null);
-
-  // Removed the useEffect hook that listened for params.loggedIn
-  /*
-  useEffect(() => {
-    if (params.loggedIn === 'true') {
-      setShowSuccessMsg(true);
-      const timer = setTimeout(() => {
-        setShowSuccessMsg(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [params.loggedIn]);
-  */
 
   const onChangeDate = (event: any, selectedDate: Date | undefined) => {
     setShowDatePicker(false);
