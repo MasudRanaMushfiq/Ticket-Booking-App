@@ -10,11 +10,15 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { auth, db } from '../../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function ConfirmScreen() {
   const router = useRouter();
@@ -40,9 +44,7 @@ export default function ConfirmScreen() {
           const userDocSnap = await getDoc(userDocRef);
           if (userDocSnap.exists()) {
             const data = userDocSnap.data();
-            if (data.fullName) {
-              setFullName(data.fullName);
-            }
+            if (data.fullName) setFullName(data.fullName);
           }
         } catch (error) {
           console.error('Error fetching user fullName:', error);
@@ -63,7 +65,7 @@ export default function ConfirmScreen() {
         date,
         busId,
         busName,
-        acType: acType || 'Non AC', // ✅ Send AC type forward
+        acType: acType || 'Non AC',
         seatLabels: JSON.stringify(seatLabels),
         passengerNames: JSON.stringify([fullName]),
         totalPrice: totalPrice.toString(),
@@ -81,85 +83,115 @@ export default function ConfirmScreen() {
     );
   }
 
+  const farePerSeat = Number(price);
+  const totalFare = farePerSeat * seatLabels.length;
+  const onlineCost = totalFare * 0.05; // Example 5% online fee
+  const vat = totalFare * 0.10; // Example 10% VAT
+  const grandTotal = totalFare + onlineCost + vat;
+
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        translucent
+        backgroundColor="transparent"
+      />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <ScrollView keyboardShouldPersistTaps="always" contentContainerStyle={{ paddingBottom: 40 }}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: SCREEN_HEIGHT * 0.05 }}
+          >
+            {/* Top Card: Passenger & Seat Info */}
             <View style={styles.card}>
-              {/* User Info */}
               <View style={styles.topSection}>
                 <Ionicons name="person-circle-outline" size={48} color="#3a125d" />
-                <View style={styles.passengerInfo}>
-                  <Text style={styles.label}>Name:</Text>
+                <View style={{ marginLeft: 15, flex: 1 }}>
+                  <Text style={styles.label}>Passenger:</Text>
                   <Text style={styles.userName}>{fullName}</Text>
                 </View>
               </View>
 
-              {/* Solid Line */}
               <View style={styles.solidLine} />
 
-              {/* Booked Seat Info */}
-              <View style={styles.seatContainer}>
-                <Text style={styles.label}>Booked Seat:</Text>
-                <View style={styles.seatWrap}>
-                  {seatLabels.map((seat) => (
-                    <View key={seat} style={styles.seatBox}>
-                      <Text style={styles.seatText}>{seat}</Text>
-                    </View>
-                  ))}
-                </View>
+              <View style={styles.infoRow}>
+                <Ionicons name="location-outline" size={24} color="#e89d07" />
+                <Text style={styles.infoText}>{from} → {to}</Text>
               </View>
 
-              {/* Solid Line */}
+              <View style={styles.infoRow}>
+                <MaterialCommunityIcons
+                  name="calendar-clock"
+                  size={24}
+                  color="#3a125d"
+                />
+                <Text style={styles.infoText}>
+                  {date
+                    ? new Date(date as string).toLocaleDateString('en-BD', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })
+                    : 'N/A'}
+                </Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Ionicons name="bus" size={24} color="#0093e9" />
+                <Text style={styles.infoText}>{busName || 'Bus Name'}</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Ionicons name="snow-outline" size={24} color="#0093e9" />
+                <Text style={styles.infoText}>
+                  {acType?.toString().toUpperCase() === 'AC' ? 'AC Bus' : 'Non-AC Bus'}
+                </Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Ionicons name="pricetag-outline" size={24} color="#3a125d" />
+                <Text style={styles.infoText}>
+                  Seats: {seatLabels.join(', ')}
+                </Text>
+              </View>
+            </View>
+
+            {/* Bottom Card: Fare Details */}
+            <View style={styles.card}>
+              <Text style={[styles.sectionTitle]}>Fare Details</Text>
+
+              <View style={styles.fareRow}>
+                <Text style={styles.fareLabel}>Fare per seat</Text>
+                <Text style={styles.fareValue}>৳ {farePerSeat}</Text>
+              </View>
+
+              <View style={styles.fareRow}>
+                <Text style={styles.fareLabel}>Seats ({seatLabels.length})</Text>
+                <Text style={styles.fareValue}>৳ {totalFare}</Text>
+              </View>
+
+              <View style={styles.fareRow}>
+                <Text style={styles.fareLabel}>Online Charge (5%)</Text>
+                <Text style={styles.fareValue}>৳ {onlineCost.toFixed(2)}</Text>
+              </View>
+
+              <View style={styles.fareRow}>
+                <Text style={styles.fareLabel}>VAT (10%)</Text>
+                <Text style={styles.fareValue}>৳ {vat.toFixed(2)}</Text>
+              </View>
+
               <View style={styles.solidLine} />
 
-              {/* Bus Info */}
-              <View style={styles.bottomSection}>
-                <View style={styles.infoRow}>
-                  <Ionicons name="bus" size={24} color="#e89d07" style={styles.icon} />
-                  <Text style={styles.infoText}>{busName || 'Bus Name'}</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <MaterialCommunityIcons
-                    name="calendar-clock"
-                    size={24}
-                    color="#3a125d"
-                    style={styles.icon}
-                  />
-                  <Text style={styles.infoText}>
-                    {date
-                      ? new Date(date as string).toLocaleDateString('en-BD', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })
-                      : 'N/A'}
-                  </Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Ionicons name="snow-outline" size={24} color="#0093e9" style={styles.icon} />
-                  <Text style={styles.infoText}>
-                    {acType?.toString().toUpperCase() === 'AC' ? 'AC Bus' : 'Non-AC Bus'}
-                  </Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Ionicons name="cash" size={24} color="#0c893aff" style={styles.icon} />
-                  <Text style={styles.infoText}>Price per seat: ৳ {price}</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Ionicons name="cash" size={24} color="#3a125d" style={styles.icon} />
-                  <Text style={[styles.infoText, { fontWeight: '800', fontSize: 20 }]}>
-                    Total Price: ৳ {Number(price) * seatLabels.length}
-                  </Text>
-                </View>
+              <View style={styles.fareRow}>
+                <Text style={[styles.fareLabel, { fontSize: 18, fontWeight: '800' }]}>
+                  Total
+                </Text>
+                <Text style={[styles.fareValue, { fontSize: 18, fontWeight: '800' }]}>
+                  ৳ {grandTotal.toFixed(2)}
+                </Text>
               </View>
             </View>
 
@@ -169,8 +201,8 @@ export default function ConfirmScreen() {
             </TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
-    </TouchableWithoutFeedback>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
   );
 }
 
@@ -178,14 +210,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#eceefc',
-    padding: 24,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    paddingVertical: 20,
-    paddingHorizontal: 25,
-    marginBottom: 30,
+    padding: 20,
+    marginHorizontal: SCREEN_WIDTH * 0.05,
+    marginVertical: 10,
     elevation: 5,
     shadowColor: '#000',
     shadowOpacity: 0.1,
@@ -195,16 +226,12 @@ const styles = StyleSheet.create({
   topSection: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  passengerInfo: {
-    marginLeft: 15,
-    flex: 1,
+    marginBottom: 15,
   },
   label: {
     fontSize: 16,
     color: '#636060',
     fontWeight: '600',
-    marginBottom: 6,
   },
   userName: {
     fontSize: 18,
@@ -214,42 +241,37 @@ const styles = StyleSheet.create({
   solidLine: {
     height: 1,
     backgroundColor: '#3a125d',
-    marginVertical: 20,
+    marginVertical: 15,
+    opacity: 0.2,
   },
-  seatContainer: {
-    marginBottom: 10,
-  },
-  seatWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  seatBox: {
-    backgroundColor: '#3a125d10',
-    borderColor: '#3a125d',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  seatText: {
-    fontSize: 16,
-    color: '#3a125d',
-    fontWeight: '600',
-  },
-  bottomSection: {},
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-  },
-  icon: {
-    marginRight: 15,
+    marginVertical: 5,
+    gap: 10,
   },
   infoText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#3a125d',
+  },
+  sectionTitle: {
     fontSize: 18,
+    fontWeight: '700',
+    color: '#3a125d',
+    marginBottom: 15,
+  },
+  fareRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 5,
+  },
+  fareLabel: {
+    fontSize: 16,
+    color: '#636060',
+  },
+  fareValue: {
+    fontSize: 16,
     color: '#3a125d',
     fontWeight: '600',
   },
@@ -258,6 +280,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 15,
     alignItems: 'center',
+    marginHorizontal: SCREEN_WIDTH * 0.05,
+    marginVertical: 20,
     elevation: 3,
   },
   buttonText: {

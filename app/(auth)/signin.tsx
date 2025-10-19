@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link, useRouter, useLocalSearchParams } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
 
 export default function SignInScreen() {
@@ -10,9 +10,11 @@ export default function SignInScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showLogoutMsg, setShowLogoutMsg] = useState(false);
-  const [showLoginSuccessMsg, setShowLoginSuccessMsg] = useState(false); // New state for login success message
   const [error, setError] = useState('');
+  const [showLogoutMsg, setShowLogoutMsg] = useState(false);
+  const [showLoginSuccessMsg, setShowLoginSuccessMsg] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [forgotPassword, setForgotPassword] = useState(false);
 
   useEffect(() => {
     if (params.loggedOut === 'true') {
@@ -26,38 +28,50 @@ export default function SignInScreen() {
       setError('Please enter both email and password.');
       return;
     }
+    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       setError('');
-      setShowLoginSuccessMsg(true); // Show the success message
-
-      // Set a timeout to hide the message and then navigate
+      setShowLoginSuccessMsg(true);
       setTimeout(() => {
-        setShowLoginSuccessMsg(true); // Hide the message
+        setShowLoginSuccessMsg(false);
         router.replace({ pathname: '/home', params: { loggedIn: 'true' } });
-      }, 1000); // Display the success message for 2 seconds
+      }, 1500);
     } catch (error: any) {
       setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email.trim()) {
+      setError('Please enter your email.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setError('');
+      alert(`Password reset email sent to ${email}`);
+      router.replace('/signin');
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      {showLogoutMsg && (
-        <Text style={styles.logoutMessage}>
-          You have been logged out successfully.
-        </Text>
-      )}
-
-      {showLoginSuccessMsg && ( // Conditionally render the success message
-        <Text style={styles.successMessage}>
-          Login successful! Redirecting...
-        </Text>
-      )}
-
       <Text style={styles.title}>Welcome Here!</Text>
-      <Text style={styles.subtitle}>Sign in to continue</Text>
+      <Text style={styles.subtitle}>
+        {forgotPassword
+          ? 'Enter your email to reset password'
+          : 'Sign in to continue'}
+      </Text>
 
+      <Text style={styles.label}>Email</Text>
       <TextInput
         placeholder="Email"
         placeholderTextColor="#8b8686"
@@ -69,33 +83,71 @@ export default function SignInScreen() {
         style={styles.input}
         keyboardType="email-address"
         autoCapitalize="none"
-        autoCorrect={false}
       />
 
-      <TextInput
-        placeholder="Password"
-        placeholderTextColor="#8b8686"
-        value={password}
-        onChangeText={(text) => {
-          setPassword(text);
-          setError('');
-        }}
-        style={styles.input}
-        secureTextEntry
-      />
+      {!forgotPassword && (
+        <>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor="#8b8686"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setError('');
+            }}
+            style={styles.input}
+            secureTextEntry
+          />
+
+          {/* Forgot Password link */}
+          <TouchableOpacity
+            onPress={() => setForgotPassword(true)}
+            style={styles.forgotWrapper}
+          >
+            <Text style={styles.forgotText}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </>
+      )}
 
       {error !== '' && <Text style={styles.errorText}>{error}</Text>}
 
-      <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-        <Text style={styles.buttonText}>Sign In</Text>
-      </TouchableOpacity>
+      {!forgotPassword ? (
+        <>
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.7 }]}
+            onPress={handleSignIn}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Text>
+          </TouchableOpacity>
 
-      <Text style={styles.linkText}>
-        Don&#39;t have an account?{' '}
-        <Link href="/signup" style={styles.link}>
-          Sign Up
-        </Link>
-      </Text>
+          <Text style={styles.linkText}>
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" style={styles.link}>
+              Register
+            </Link>
+          </Text>
+        </>
+      ) : (
+        <>
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.7 }]}
+            onPress={handleResetPassword}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? 'Sending...' : 'Send Reset Email'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setForgotPassword(false)}>
+            <Text style={styles.backText}>Back to Sign In</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 }
@@ -103,92 +155,81 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#eceefc', // Background color
+    backgroundColor: '#eceefc',
     justifyContent: 'center',
     padding: 24,
-  },
-  logoutMessage: {
-    position: 'absolute',
-    top: 100,
-    left: 50,
-    right: 50,
-    backgroundColor: '#feb8b8ff', // lighter tone of secondary #e89d07
-    paddingVertical: 18,
-    borderRadius: 18,
-    color: '#000000ff', // dark secondary shade
-    textAlign: 'center',
-    fontSize: 17,
-    fontWeight: '400',
-    zIndex: 10,
-    elevation: 10,
-  },
-  successMessage: { // New style for the login success message
-    position: 'absolute',
-    top: 100, // Adjusted position to avoid overlapping with logout message
-    left: 40,
-    right: 40,
-    backgroundColor: '#e2fde8ff', // Light green for success
-    paddingVertical: 18,
-    borderRadius: 16,
-    color: '#115b23ff', // Dark green text
-    textAlign: 'center',
-    fontSize: 18,
-    zIndex: 10,
-    elevation: 10,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#3a125d', // primary color
+    color: '#3a125d',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#544d4d', // text color
+    color: '#544d4d',
     marginBottom: 30,
+  },
+  label: {
+    fontSize: 14,
+    color: '#3a125d',
+    fontWeight: '600',
+    marginBottom: 5,
+    marginLeft: 5,
   },
   input: {
     height: 50,
-    borderColor: '#3a125d', // primary color border
+    borderColor: '#3a125d',
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 15,
     marginBottom: 15,
     backgroundColor: '#fff',
-    color: '#544d4d', // input text color
+    color: '#544d4d',
   },
   errorText: {
-    color: '#b91c1c', // red error color
+    color: '#b91c1c',
     fontSize: 13,
     marginBottom: 10,
     marginLeft: 5,
   },
   button: {
-    backgroundColor: '#3a125d', // primary color
+    backgroundColor: '#3a125d',
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
     marginTop: 10,
   },
   buttonText: {
-    color: '#eceefc', // background color for contrast (white-ish)
+    color: '#eceefc',
     fontSize: 18,
     fontWeight: '600',
+  },
+  forgotWrapper: {
+    alignSelf: 'flex-end',
+    marginBottom: 15,
+  },
+  forgotText: {
+    color: '#e89d07',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+    fontSize: 14,
   },
   linkText: {
     marginTop: 20,
     textAlign: 'center',
-    color: '#544d4d', // text color
+    color: '#544d4d',
   },
   link: {
-    color: '#e89d07', // secondary color
+    color: '#e89d07',
     fontWeight: 'bold',
+  },
+  backText: {
+    color: '#3B7CF5',
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

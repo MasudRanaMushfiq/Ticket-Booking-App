@@ -8,15 +8,21 @@ import {
   ActivityIndicator,
   ScrollView,
   Image,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { db } from '../../firebaseConfig';
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
 import { FontAwesome } from '@expo/vector-icons';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export default function AvailableBusScreen() {
   const { from, to, date } = useLocalSearchParams();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [loading, setLoading] = useState(true);
   const [sameDayBuses, setSameDayBuses] = useState<any[]>([]);
@@ -95,11 +101,10 @@ export default function AvailableBusScreen() {
     const endHour = parseInt(startTime?.split(':')[0] || '0', 10) + 4;
     const endTime = `${endHour < 10 ? '0' : ''}${endHour}:${startTime?.split(':')[1] || '00'}`;
 
-    // Determine AC or Non AC label
     const acLabel = item.acType === 'AC' ? 'AC' : 'Non AC';
 
     return (
-      <View style={styles.busCard}>
+      <View style={[styles.busCard, { width: SCREEN_WIDTH * 0.9 }]}>
         <View style={styles.topSection}>
           <Image source={require('../../assets/images/bus1.png')} style={styles.busLogo} />
           <View style={{ flex: 1, marginLeft: 12 }}>
@@ -121,12 +126,7 @@ export default function AvailableBusScreen() {
             {[...Array(7)].map((_, i) => (
               <View key={`dot1-${i}`} style={styles.dot} />
             ))}
-            <FontAwesome
-              name="bus"
-              size={20}
-              color="#3a125d"
-              style={{ marginHorizontal: 8 }}
-            />
+            <FontAwesome name="bus" size={20} color="#3a125d" style={{ marginHorizontal: 8 }} />
             {[...Array(7)].map((_, i) => (
               <View key={`dot2-${i}`} style={styles.dot} />
             ))}
@@ -153,7 +153,7 @@ export default function AvailableBusScreen() {
                     busId: item.id,
                     date: item.date?.toDate?.().toISOString() || '',
                     time: item.departureTime || '',
-                    acType: item.acType || 'Non AC', // <-- Send acType in route
+                    acType: item.acType || 'Non AC',
                   },
                 })
               }
@@ -177,9 +177,10 @@ export default function AvailableBusScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
-      {sameDayBuses.length > 0 ? (
-        <View>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        {sameDayBuses.length > 0 ? (
           <FlatList
             data={sameDayBuses}
             keyExtractor={(item) => item.id}
@@ -187,32 +188,35 @@ export default function AvailableBusScreen() {
             scrollEnabled={false}
             ItemSeparatorComponent={() => <View style={{ height: 18 }} />}
           />
-        </View>
-      ) : (
-        <Text style={styles.noBus}>No buses found for this date</Text>
-      )}
+        ) : (
+          <Text style={styles.noBus}>No buses found for this date</Text>
+        )}
 
-      {futureBuses.length > 0 && (
-        <View style={{ marginTop: 30 }}>
-          <Text style={styles.sectionTitle}>Upcoming Buses</Text>
-          <FlatList
-            data={futureBuses}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={{ height: 18 }} />}
-          />
-        </View>
-      )}
-    </ScrollView>
+        {futureBuses.length > 0 && (
+          <View style={{ marginTop: 30 }}>
+            <Text style={styles.sectionTitle}>Upcoming Buses</Text>
+            <FlatList
+              data={futureBuses}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              scrollEnabled={false}
+              ItemSeparatorComponent={() => <View style={{ height: 18 }} />}
+            />
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: '#eceefc',
-    paddingHorizontal: 16,
+  },
+  container: {
+    alignItems: 'center',
+    paddingBottom: 30,
     paddingTop: 20,
   },
   center: {
@@ -225,6 +229,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#3a125d',
     marginBottom: 10,
+    alignSelf: 'flex-start',
+    marginLeft: 16,
   },
   noBus: {
     fontSize: 16,
