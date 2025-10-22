@@ -1,24 +1,23 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+// app/_layout.tsx
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
+export default function Layout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }}/>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }}/>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
+      <Stack.Screen name="admin" options={{ headerShown: false }}/>
+      <Stack.Screen name="bus" options={{ headerShown: false }}/>
+      <Stack.Screen name="ticket" options={{ headerShown: false }}/>
+      <Stack.Screen name="payment/payment" options={{ headerShown: false }}/>
+      <Stack.Screen name="ticket/ticketPrint" options={{ headerShown: false }}/>
+      <Stack.Screen name="bus/availablebus" options={{ headerShown: false }}/>
+      <Stack.Screen name="bus/availableseat" options={{ headerShown: false }}/>
+      <Stack.Screen name="ticket/confirm.tsx" options={{ headerShown: false }}/>
+      <Stack.Screen name="ticket/ticketHistory" options={{ headerShown: false }}/>
+      <Stack.Screen name="screen/editprofile" options={{ headerShown: false }}/>
+    </Stack>
   );
 }
+
