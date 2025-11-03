@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { Link, useRouter, useLocalSearchParams } from 'expo-router';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function SignInScreen() {
   const [showLoginSuccessMsg, setShowLoginSuccessMsg] = useState(false);
   const [loading, setLoading] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (params.loggedOut === 'true') {
@@ -37,7 +39,7 @@ export default function SignInScreen() {
         setShowLoginSuccessMsg(false);
         router.replace({ pathname: '/home', params: { loggedIn: 'true' } });
       }, 1500);
-    } catch (error: any) {
+    } catch (error) {
       setError(error.message);
     } finally {
       setLoading(false);
@@ -55,7 +57,7 @@ export default function SignInScreen() {
       setError('');
       alert(`Password reset email sent to ${email}`);
       router.replace('/signin');
-    } catch (error: any) {
+    } catch (error) {
       setError(error.message);
     } finally {
       setLoading(false);
@@ -88,17 +90,31 @@ export default function SignInScreen() {
       {!forgotPassword && (
         <>
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            placeholder="Password"
-            placeholderTextColor="#8b8686"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              setError('');
-            }}
-            style={styles.input}
-            secureTextEntry
-          />
+
+          {/* Password input with eye toggle */}
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Password"
+              placeholderTextColor="#8b8686"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                setError('');
+              }}
+              style={[styles.input, { flex: 1, marginBottom: 0 }]}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeIcon}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color="#3a125d"
+              />
+            </TouchableOpacity>
+          </View>
 
           {/* Forgot Password link */}
           <TouchableOpacity
@@ -188,6 +204,15 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     backgroundColor: '#fff',
     color: '#544d4d',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
   },
   errorText: {
     color: '#b91c1c',

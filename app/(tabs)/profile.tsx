@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
+  RefreshControl,
 } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../../firebaseConfig';
 import { useRouter } from 'expo-router';
-import { doc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, Timestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -32,40 +32,58 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasUnreadNotification, setHasUnreadNotification] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchUserAndRole = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      router.replace('/signin');
+      return;
+    }
+
+    try {
+      // Fetch user data
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        setUserInfo(userDoc.data() as UserData);
+      } else {
+        setErrorMsg('User data not found.');
+      }
+
+      // Check admin
+      const adminRef = doc(db, 'admins', user.uid);
+      const adminDoc = await getDoc(adminRef);
+      if (adminDoc.exists() && adminDoc.data()?.role === 'admin') {
+        setIsAdmin(true);
+      }
+
+      // Check unread notifications by userId
+      const notifQuery = query(
+        collection(db, 'notifications'),
+        where('userId', '==', user.uid),
+        where('status', '==', false)
+      );
+      const notifSnap = await getDocs(notifQuery);
+      setHasUnreadNotification(!notifSnap.empty);
+    } catch (err) {
+      console.error('Error fetching user data:', err);
+      setErrorMsg('Failed to load user data.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserAndRole = async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        router.replace('/signin');
-        return;
-      }
-
-      try {
-        const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
-
-        if (userDoc.exists()) {
-          setUserInfo(userDoc.data() as UserData);
-        } else {
-          setErrorMsg('User data not found.');
-        }
-
-        const adminRef = doc(db, 'admins', user.uid);
-        const adminDoc = await getDoc(adminRef);
-        if (adminDoc.exists() && adminDoc.data()?.role === 'admin') {
-          setIsAdmin(true);
-        }
-      } catch (err) {
-        console.error('Error fetching user data:', err);
-        setErrorMsg('Failed to load user data.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUserAndRole();
-  }, [router]);
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchUserAndRole().finally(() => setRefreshing(false));
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -77,13 +95,9 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleEdit = () => {
-    router.push('/screen/editprofile');
-  };
-
-  const handleContact = () => {
-    router.push('/admin/contacts'); // Navigate to Contact page
-  };
+  const handleEdit = () => router.push('/screen/editprofile');
+  const handleContact = () => router.push('/admin/contacts');
+  const handleNotificationPress = () => router.push('/screen/notifications');
 
   if (loading) {
     return (
@@ -97,22 +111,40 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" backgroundColor="#3B7CF5" />
 
-      {/* ================== Header ================== */}
+      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <Text style={styles.headerTitle}>My Profile</Text>
-        <View style={{ width: 32 }} />
+
+        {/* Notification Icon */}
+        <TouchableOpacity onPress={handleNotificationPress} style={{ position: 'relative' }}>
+          <Ionicons name="notifications-outline" size={28} color="#fff" />
+          {hasUnreadNotification && (
+            <View
+              style={{
+                position: 'absolute',
+                top: -2,
+                right: -2,
+                width: 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor: 'red',
+              }}
+            />
+          )}
+        </TouchableOpacity>
       </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContentContainer}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {errorMsg ? (
           <Text style={styles.errorText}>{errorMsg}</Text>
         ) : (
           <>
-            {/* Compact Profile Card */}
+            {/* Profile Card */}
             <View style={styles.profileCard}>
               <View style={styles.topRow}>
                 <Ionicons name="person-circle" size={70} color="#3B7CF5" style={styles.avatarSmall} />
@@ -170,7 +202,7 @@ export default function ProfileScreen() {
 
               <TouchableOpacity style={styles.actionButton} onPress={handleContact}>
                 <Ionicons name="call-outline" size={26} color="#3B7CF5" />
-                <Text style={styles.actionButtonText}>Contact Us</Text>
+                <Text style={styles.actionButtonText}>Give Complain</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
@@ -186,16 +218,9 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#eceefc',
-    paddingTop: 0,
-  },
-  loadingIndicator: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  safeArea: { flex: 1, backgroundColor: '#eceefc', paddingTop: 0 },
+  loadingIndicator: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
   header: {
     backgroundColor: '#3B7CF5',
     paddingVertical: 18,
@@ -204,27 +229,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     elevation: 4,
-    marginTop: -10,
   },
-  backBtn: { padding: 4, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
-    flex: 1,
-  },
-  scrollContentContainer: {
-    padding: 20,
-    paddingBottom: 50,
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    marginVertical: 20,
-    fontWeight: '600',
-    fontSize: 16,
-  },
+  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', textAlign: 'center', flex: 1 },
+
+  scrollContentContainer: { padding: 20, paddingBottom: 50 },
+  errorText: { color: 'red', textAlign: 'center', marginVertical: 20, fontWeight: '600', fontSize: 16 },
+
   profileCard: {
     backgroundColor: '#fff',
     borderRadius: 20,
@@ -236,11 +246,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 8,
   },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
+  topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   avatarSmall: { marginRight: 15 },
   nameEmailContainer: { flex: 1 },
   nameCompact: { fontSize: 20, fontWeight: '800', color: '#3B7CF5', marginBottom: 3 },
@@ -262,6 +268,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   editButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
   actionButtonsContainer: { flex: 1 },
   actionButton: {
     backgroundColor: '#fff',

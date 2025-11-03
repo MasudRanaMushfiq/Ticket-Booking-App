@@ -6,10 +6,21 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
+  TextInput,
   Alert,
 } from 'react-native';
-import { db } from '../../firebaseConfig';
-import { collection, getDocs, query, orderBy, doc, deleteDoc } from 'firebase/firestore';
+import { db, auth } from '../../firebaseConfig';
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  deleteDoc,
+  addDoc,
+  serverTimestamp,
+  updateDoc,
+} from 'firebase/firestore';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,8 +30,14 @@ interface Complaint {
   id: string;
   name: string;
   email: string;
-  message: string;
+  phone?: string;
+  gender?: string;
+  title?: string;
+  type?: string;
+  description?: string;
+  status?: string;
   createdAt: any;
+  userId?: string; // UID of the user who created the complaint
 }
 
 export default function ComplaintsScreen() {
@@ -28,6 +45,7 @@ export default function ComplaintsScreen() {
   const router = useRouter();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [messages, setMessages] = useState<{ [key: string]: string }>({});
 
   const fetchComplaints = async () => {
     try {
@@ -62,6 +80,37 @@ export default function ComplaintsScreen() {
     }
   };
 
+  const handleSendMessage = async (complaint: Complaint) => {
+    const messageText = messages[complaint.id];
+    if (!messageText || !messageText.trim()) {
+      Alert.alert('Error', 'Please enter a message before sending.');
+      return;
+    }
+
+    try {
+      // Add notification to notifications collection with userId
+      await addDoc(collection(db, 'notifications'), {
+        userEmail: complaint.email,
+        userId: complaint.userId, // ✅ track the UID of the user
+        title: 'Response to your complaint',
+        message: messageText,
+        status: false, // unread
+        createdAt: serverTimestamp(),
+      });
+
+      // Update complaint status to solved
+      const complaintRef = doc(db, 'complaints', complaint.id);
+      await updateDoc(complaintRef, { status: 'solved' });
+
+      Alert.alert('Success', 'Message sent and complaint marked as solved!');
+      setMessages({ ...messages, [complaint.id]: '' }); // clear input
+      fetchComplaints(); // refresh complaints list
+    } catch (err) {
+      console.error('Send message error:', err);
+      Alert.alert('Error', 'Failed to send message.');
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -93,19 +142,72 @@ export default function ComplaintsScreen() {
                 <Text style={styles.label}>Name:</Text>
                 <Text style={styles.value}>{item.name}</Text>
               </View>
-              <View style={styles.separator} />
               <View style={styles.row}>
                 <Text style={styles.label}>Email:</Text>
                 <Text style={styles.value}>{item.email}</Text>
               </View>
-              <View style={styles.separator} />
-              <View style={styles.row}>
-                <Text style={styles.label}>Message:</Text>
-              </View>
-              <Text style={styles.message}>{item.message}</Text>
+              {item.phone && (
+                <View style={styles.row}>
+                  <Text style={styles.label}>Phone:</Text>
+                  <Text style={styles.value}>{item.phone}</Text>
+                </View>
+              )}
+              {item.gender && (
+                <View style={styles.row}>
+                  <Text style={styles.label}>Gender:</Text>
+                  <Text style={styles.value}>{item.gender}</Text>
+                </View>
+              )}
+              {item.title && (
+                <View style={styles.row}>
+                  <Text style={styles.label}>Title:</Text>
+                  <Text style={styles.value}>{item.title}</Text>
+                </View>
+              )}
+              {item.type && (
+                <View style={styles.row}>
+                  <Text style={styles.label}>Type:</Text>
+                  <Text style={styles.value}>{item.type}</Text>
+                </View>
+              )}
+              {item.description && (
+                <View style={{ marginTop: 6 }}>
+                  <Text style={styles.label}>Description:</Text>
+                  <Text style={styles.message}>{item.description}</Text>
+                </View>
+              )}
+              {item.status && (
+                <View style={styles.row}>
+                  <Text style={styles.label}>Status:</Text>
+                  <Text style={styles.value}>{item.status}</Text>
+                </View>
+              )}
               {item.createdAt && (
                 <Text style={styles.date}>{item.createdAt.toDate().toLocaleString()}</Text>
               )}
+
+              {/* Show input & send only if complaint not solved */}
+              {item.status !== 'solved' && (
+                <>
+                  <TextInput
+                    placeholder="Type your response..."
+                    placeholderTextColor="#999"
+                    style={styles.input}
+                    value={messages[item.id] || ''}
+                    onChangeText={(text) =>
+                      setMessages({ ...messages, [item.id]: text })
+                    }
+                  />
+                  <TouchableOpacity
+                    style={styles.sendButton}
+                    onPress={() => handleSendMessage(item)}
+                  >
+                    <Text style={styles.sendButtonText}>Send Message</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {/* Always show Delete button */}
               <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleDelete(item.id)}
@@ -153,16 +255,37 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   row: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  label: { fontSize: 14, fontWeight: '600', color: '#3B7CF5', width: 70 },
+  label: { fontSize: 14, fontWeight: '600', color: '#3B7CF5', width: 80 },
   value: { fontSize: 15, color: '#544d4d', flex: 1 },
-  separator: { height: 1, backgroundColor: '#ddd', marginVertical: 6 },
   message: { fontSize: 15, color: '#333', marginBottom: 8 },
   date: { fontSize: 12, color: '#636060', textAlign: 'right', marginBottom: 10 },
+
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 10,
+    color: '#333',
+    fontSize: 14,
+    backgroundColor: '#fff',
+  },
+  sendButton: {
+    backgroundColor: '#3B7CF5',
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  sendButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
   deleteButton: {
     backgroundColor: '#b91c1c',
     paddingVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 10,
   },
   deleteButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });

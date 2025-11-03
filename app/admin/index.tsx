@@ -55,7 +55,7 @@ export default function Dashboard() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.button} onPress={handleComplain}>
-          <Ionicons name="add-circle-outline" size={20} color="#3B7CF5" style={styles.icon} />
+          <Ionicons name="wallet-outline" size={20} color="#3B7CF5" style={styles.icon} />
           <Text style={styles.buttonText}>All Complaint</Text>
         </TouchableOpacity>
 

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TicketBooking",
-    "slug": "TicketBooking",
+    "slug": "ticket-booking",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -48,8 +48,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "8f7643d4-31ed-4322-88c7-329f0b7fc836"
+        "projectId": "123c29ee-182b-4a34-a5df-66084a6794ae"
       }
-    }
+    },
+    "owner": "myblinkfile"
   }
 }

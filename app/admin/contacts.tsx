@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,45 +10,83 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { db } from '../../firebaseConfig';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { db, auth } from '../../firebaseConfig';
+import { collection, addDoc, Timestamp, getDoc, doc } from 'firebase/firestore';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { Picker } from '@react-native-picker/picker';
 
-export default function ContactScreen() {
+export default function ComplaintScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
+  // Form fields
+  const [title, setTitle] = useState('');
+  const [type, setType] = useState('Service');
+  const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSend = async () => {
-    if (!name || !email || !message) {
-      Alert.alert('Error', 'Please fill all fields');
+  // Current user info
+  const [userData, setUserData] = useState<{ name: string; email: string; phone: string }>({
+    name: '',
+    email: '',
+    phone: '',
+  });
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        let phone = '';
+        try {
+          // Try fetching phone from Firestore if available
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (userDoc.exists()) {
+            phone = userDoc.data().phone || '';
+          }
+        } catch (err) {
+          console.warn('Could not fetch user phone:', err);
+        }
+
+        setUserData({
+          name: currentUser.displayName || 'Unknown User',
+          email: currentUser.email || '',
+          phone: phone || currentUser.phoneNumber || '',
+        });
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
+  const handleSubmitComplaint = async () => {
+    if (!title || !description) {
+      Alert.alert('Error', 'Please fill all fields.');
       return;
     }
 
     setLoading(true);
     try {
       await addDoc(collection(db, 'complaints'), {
-        name,
-        email,
-        message,
+        userId: auth.currentUser?.uid || '',
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        title,
+        type,
+        description,
+        status: 'pending',
         createdAt: Timestamp.now(),
       });
 
-      Alert.alert('Success', 'Your message has been sent!');
-      setName('');
-      setEmail('');
-      setMessage('');
-      
-      // Navigate back after submission
+      Alert.alert('Success', 'Your complaint has been submitted!');
+      setTitle('');
+      setDescription('');
+      setType('Service');
       router.back();
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to send your message.');
+      Alert.alert('Error', 'Failed to submit your complaint.');
     } finally {
       setLoading(false);
     }
@@ -63,48 +101,65 @@ export default function ContactScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Contact Us</Text>
+        <Text style={styles.headerTitle}>Submit a Complaint</Text>
         <View style={{ width: 32 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.formCard}>
-          <Text style={styles.label}>Name</Text>
+          {/* Auto user info */}
+          <View style={styles.userInfoBox}>
+            <Text style={styles.userInfoText}>Name: {userData.name}</Text>
+            <Text style={styles.userInfoText}>Email: {userData.email}</Text>
+            {userData.phone ? (
+              <Text style={styles.userInfoText}>Phone: {userData.phone}</Text>
+            ) : null}
+          </View>
+
+          {/* Complaint Title */}
+          <Text style={styles.label}>Complaint Title</Text>
           <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Your Name"
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Enter complaint title"
             placeholderTextColor="#999"
             style={styles.input}
           />
 
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Your Email"
-            placeholderTextColor="#999"
-            keyboardType="email-address"
-            style={styles.input}
-          />
+          {/* Complaint Type */}
+          <Text style={styles.label}>Complaint Type</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={type}
+              onValueChange={(value) => setType(value)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Service" value="Service" />
+              <Picker.Item label="Payment" value="Payment" />
+              <Picker.Item label="Technical" value="Technical" />
+              <Picker.Item label="Other" value="Other" />
+            </Picker>
+          </View>
 
-          <Text style={styles.label}>Message</Text>
+          {/* Description */}
+          <Text style={styles.label}>Description</Text>
           <TextInput
-            value={message}
-            onChangeText={setMessage}
-            placeholder="Type your message..."
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Describe your issue..."
             placeholderTextColor="#999"
             multiline
             style={[styles.input, { height: 120 }]}
           />
 
+          {/* Submit button */}
           <TouchableOpacity
-            onPress={handleSend}
+            onPress={handleSubmitComplaint}
             style={[styles.sendButton, { backgroundColor: '#3B7CF5' }]}
             disabled={loading}
           >
             <Text style={styles.sendButtonText}>
-              {loading ? 'Sending...' : 'Send Message'}
+              {loading ? 'Submitting...' : 'Submit Complaint'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -127,10 +182,14 @@ const styles = StyleSheet.create({
     marginTop: -20,
   },
   backBtn: { padding: 4 },
-  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', textAlign: 'center', flex: 1 },
-
+  headerTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    flex: 1,
+  },
   container: { padding: 16, alignItems: 'center', paddingBottom: 40 },
-
   formCard: {
     backgroundColor: '#fff',
     borderRadius: 18,
@@ -143,8 +202,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-
-  label: { fontSize: 14, fontWeight: '600', color: '#3a125d', marginTop: 12 },
+  userInfoBox: {
+    backgroundColor: '#E6F2FF',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  userInfoText: {
+    fontSize: 14,
+    color: '#3a125d',
+    marginBottom: 2,
+    fontWeight: '500',
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3a125d',
+    marginTop: 12,
+  },
   input: {
     marginTop: 6,
     borderWidth: 1,
@@ -156,7 +231,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     backgroundColor: '#fff',
   },
-
-  sendButton: { borderRadius: 24, marginTop: 20, paddingVertical: 12, alignItems: 'center' },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    marginTop: 6,
+    backgroundColor: '#fff',
+  },
+  picker: {
+    width: '100%',
+    height: 45,
+  },
+  sendButton: {
+    borderRadius: 24,
+    marginTop: 20,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
   sendButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

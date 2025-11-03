@@ -1,21 +1,61 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, StatusBar } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/firebaseConfig'; // Adjust path if needed
 
 export default function SplashScreen() {
   const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true); // Loading state while checking auth
+
+  useEffect(() => {
+    // Listen to Firebase auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is already logged in — go to home
+        router.replace('/home');
+      } else {
+        // Not logged in — stop loading, show splash
+        setCheckingAuth(false);
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, []);
+
+  if (checkingAuth) {
+    // Show loader while checking auth
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#3a125d" />
+        <Image
+          source={require('@/assets/images/image.png')}
+          style={styles.busImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.logoText}>
+          <Text style={styles.whiteText}>Bus</Text>
+          <Text style={styles.secondaryText}>Trip</Text>
+        </Text>
+        <Text style={styles.subtitle}>Book Your Bus Ticket</Text>
+        <ActivityIndicator size="large" color="#e89d07" style={{ marginTop: 30 }} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Bus Image - Bigger, white */}
+      <StatusBar barStyle="light-content" backgroundColor="#3a125d" />
+
+      {/* Bus Image */}
       <Image
-        source={require('@/assets/images/image.png')} // Your bus image path
+        source={require('@/assets/images/image.png')}
         style={styles.busImage}
         resizeMode="contain"
       />
 
-      {/* Centered Text Container */}
+      {/* Centered Text */}
       <View style={styles.textContainer}>
         <Text style={styles.logoText}>
           <Text style={styles.whiteText}>Bus</Text>
@@ -25,7 +65,10 @@ export default function SplashScreen() {
       </View>
 
       {/* Get Started Button */}
-      <TouchableOpacity style={styles.getStartedBtn} onPress={() => router.replace('/signin')}>
+      <TouchableOpacity
+        style={styles.getStartedBtn}
+        onPress={() => router.replace('/signin')}
+      >
         <Text style={styles.getStartedText}>Get Started</Text>
         <Feather name="arrow-right" size={20} color="#fff" />
       </TouchableOpacity>
@@ -44,7 +87,7 @@ const styles = StyleSheet.create({
   busImage: {
     width: 200,
     height: 200,
-    tintColor: '#fff', // make image white
+    tintColor: '#fff',
     marginBottom: -30,
     marginTop: -70,
   },
@@ -83,12 +126,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
-
-
-// for my project always follow this color code Color Palette
-// Primary Color #3a125d
-// Secondary Color #e89d07
-// Background Color #eceefc
-// Text Color #544d4d
-// Disable Color #636060

@@ -4,22 +4,55 @@ import { Link, router } from 'expo-router';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SignUpScreen() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const validateEmail = (email) => {
+    // simple regex for email validation
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   const handleSignUp = async () => {
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (!fullName || !email || !password) {
+    // Validation checks
+    if (!fullName || !email || !phone || !password || !confirmPassword) {
       setErrorMsg('Please fill in all required fields.');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+
+    if (phone.length !== 11 || !/^\d{11}$/.test(phone)) {
+      setErrorMsg('Phone number must be exactly 11 digits.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match.');
       return;
     }
 
@@ -29,18 +62,16 @@ export default function SignUpScreen() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Update displayName in Firebase Auth profile
-      await updateProfile(user, {
-        displayName: fullName,
-      });
+      // Update Firebase Auth profile
+      await updateProfile(user, { displayName: fullName });
 
-      // Save user data in Firestore with empty phone and gender fields
+      // Save user data in Firestore
       await setDoc(doc(db, 'users', user.uid), {
         uid: user.uid,
         fullName,
         email,
-        phone: '',   // silently keep phone empty
-        gender: '',  // silently keep gender empty
+        phone,
+        gender: '',
         createdAt: serverTimestamp(),
         bookingIds: [],
       });
@@ -82,13 +113,58 @@ export default function SignUpScreen() {
       />
 
       <TextInput
-        placeholder="Password"
+        placeholder="Phone Number"
         placeholderTextColor="#8b8686"
-        value={password}
-        onChangeText={setPassword}
+        value={phone}
+        onChangeText={setPhone}
         style={styles.input}
-        secureTextEntry
+        keyboardType="numeric"
+        maxLength={11}
       />
+
+      {/* Password Field */}
+      <View style={styles.passwordContainer}>
+        <TextInput
+          placeholder="Password"
+          placeholderTextColor="#8b8686"
+          value={password}
+          onChangeText={setPassword}
+          style={[styles.input, { flex: 1, marginBottom: 0 }]}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.eyeIcon}
+        >
+          <Ionicons
+            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+            size={22}
+            color="#3a125d"
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* Confirm Password Field */}
+      <View style={styles.passwordContainer}>
+        <TextInput
+          placeholder="Confirm Password"
+          placeholderTextColor="#8b8686"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          style={[styles.input, { flex: 1, marginBottom: 0 }]}
+          secureTextEntry={!showConfirmPassword}
+        />
+        <TouchableOpacity
+          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+          style={styles.eyeIcon}
+        >
+          <Ionicons
+            name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+            size={22}
+            color="#3a125d"
+          />
+        </TouchableOpacity>
+      </View>
 
       {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
       {successMsg ? <Text style={styles.successText}>{successMsg}</Text> : null}
@@ -143,6 +219,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     color: '#544d4d',
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
+  },
   button: {
     backgroundColor: '#3a125d',
     paddingVertical: 15,
@@ -182,5 +267,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-

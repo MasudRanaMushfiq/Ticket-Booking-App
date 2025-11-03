@@ -17,6 +17,7 @@ export default function Layout() {
       <Stack.Screen name="ticket/confirm.tsx" options={{ headerShown: false }}/>
       <Stack.Screen name="ticket/ticketHistory" options={{ headerShown: false }}/>
       <Stack.Screen name="screen/editprofile" options={{ headerShown: false }}/>
+      <Stack.Screen name="screen/notifications" options={{ headerShown: false }}/>
     </Stack>
   );
 }
