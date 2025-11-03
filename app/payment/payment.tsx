@@ -12,14 +12,13 @@ import {
   TextInput,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { auth, db } from '../../firebaseConfig';
 import { doc, setDoc, updateDoc, arrayUnion, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// 🔹 Simple random ID generator (alphanumeric, 12 chars)
 const generateRandomId = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let id = '';
@@ -59,8 +58,6 @@ export default function PaymentScreen() {
 
   const paymentOptions = [
     { key: 'mobile_banking', label: 'Mobile Banking', icon: <Ionicons name="phone-portrait" size={28} color="#3a125d" /> },
-    { key: 'banking', label: 'Banking', icon: <MaterialCommunityIcons name="bank" size={28} color="#3a125d" /> },
-    { key: 'card', label: 'Card', icon: <FontAwesome5 name="credit-card" size={26} color="#3a125d" /> },
   ];
 
   const handleMakePayment = async () => {
@@ -68,12 +65,10 @@ export default function PaymentScreen() {
       Alert.alert('Select Payment Method', 'Please choose a payment method first.');
       return;
     }
-
     if (!transactionId.trim()) {
       Alert.alert('Transaction ID Missing', 'Please enter your transaction ID before proceeding.');
       return;
     }
-
     if (!auth.currentUser) {
       Alert.alert('User not logged in', 'Please login to make a booking.');
       return;
@@ -81,10 +76,9 @@ export default function PaymentScreen() {
 
     setLoading(true);
     const userId = auth.currentUser.uid;
-    const bookingId = generateRandomId(); // 🔹 Use custom random ID
+    const bookingId = generateRandomId();
 
     try {
-      // 1️⃣ Create booking
       const bookingRef = doc(db, 'bookings', bookingId);
       await setDoc(bookingRef, {
         bookingId,
@@ -96,26 +90,24 @@ export default function PaymentScreen() {
         passengerName,
         transactionId,
         createdAt: serverTimestamp(),
+        paymentVerified: false,
       });
 
-      // 2️⃣ Add booking ID to user record
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, { bookingIds: arrayUnion(bookingId) });
 
-      // 3️⃣ Add booked seats to bus
       const busRef = doc(db, 'buses', busId);
       const busSnap = await getDoc(busRef);
       const currentBookedSeats: string[] = busSnap.exists() && busSnap.data().bookedSeats ? busSnap.data().bookedSeats : [];
       await updateDoc(busRef, { bookedSeats: [...currentBookedSeats, ...seatLabels] });
 
-      Alert.alert('✅ Booking Successful', `Booking ID: ${bookingId}`);
       router.replace({
         pathname: '/ticket/ticketPrint',
         params: { bookingId },
       });
     } catch (error) {
       console.error('Booking error:', error);
-      Alert.alert('❌ Booking Failed', 'Something went wrong. Please try again.');
+      Alert.alert('Booking Failed', 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -125,7 +117,7 @@ export default function PaymentScreen() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#3B7CF5" />
 
-      {/* ================== Header ================== */}
+      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={26} color="#fff" />
@@ -181,29 +173,23 @@ export default function PaymentScreen() {
           />
         </View>
 
-        {/* Show Pay Button only if Transaction ID is filled */}
-        {transactionId.trim() !== '' && (
-          <TouchableOpacity
-            style={[styles.payButton, (!paymentMethod || loading) && { backgroundColor: '#999' }]}
-            onPress={handleMakePayment}
-            disabled={!paymentMethod || loading}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.payButtonText}>{loading ? 'Processing...' : 'Make Payment'}</Text>
-          </TouchableOpacity>
-        )}
+        {/* Pay Button */}
+        <TouchableOpacity
+          style={[styles.payButton, (!paymentMethod || loading) && { backgroundColor: '#999' }]}
+          onPress={handleMakePayment}
+          disabled={!paymentMethod || loading}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.payButtonText}>{loading ? 'Processing...' : 'Make Payment'}</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#eceefc',
-  },
+  safeArea: { flex: 1, backgroundColor: '#eceefc' },
 
-  /* ================== Header ================== */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -213,55 +199,47 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     elevation: 4,
   },
-  backButton: {
-    padding: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-    textAlign: 'center',
-    flex: 1,
-  },
+  backButton: { padding: 4, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#fff', textAlign: 'center', flex: 1 },
 
   scrollContainer: {
     padding: 24,
     minHeight: SCREEN_HEIGHT - StatusBar.currentHeight!,
-    justifyContent: 'space-between',
   },
   infoCard: {
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 20,
-    marginBottom: 25,
+    marginBottom: 15, // Reduced margin for compactness
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 5,
   },
-  infoLabel: {
-    fontSize: SCREEN_WIDTH * 0.045,
-    color: '#636060',
-    fontWeight: '600',
-    marginTop: 10,
+  infoLabel: { fontSize: SCREEN_WIDTH * 0.045, color: '#636060', fontWeight: '600', marginTop: 10 },
+  infoValue: { fontSize: SCREEN_WIDTH * 0.05, fontWeight: '700', color: '#3a125d' },
+  priceValue: { fontSize: SCREEN_WIDTH * 0.055, fontWeight: '700', color: '#0c893aff', marginTop: 5 },
+
+  subtitle: { fontSize: SCREEN_WIDTH * 0.055, fontWeight: '600', color: '#3a125d', marginBottom: 10, textAlign: 'center' },
+
+  optionsContainer: { marginBottom: 15 }, // Reduced for compactness
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderColor: '#3a125d',
+    borderWidth: 2,
+    borderRadius: 15,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginBottom: 10,
   },
-  infoValue: {
-    fontSize: SCREEN_WIDTH * 0.05,
-    fontWeight: '700',
-    color: '#3a125d',
-  },
-  priceValue: {
-    fontSize: SCREEN_WIDTH * 0.055,
-    fontWeight: '700',
-    color: '#0c893aff',
-    marginTop: 5,
-  },
-  transactionContainer: {
-    marginBottom: 25,
-  },
+  optionSelected: { backgroundColor: '#3a125d' },
+  iconWrapper: { width: 30, alignItems: 'center', marginRight: 15 },
+  optionLabel: { fontSize: SCREEN_WIDTH * 0.045, fontWeight: '600', color: '#3a125d' },
+
+  transactionContainer: { marginBottom: 15 }, // Reduced spacing
   transactionInput: {
     backgroundColor: '#fff',
     paddingVertical: 14,
@@ -273,50 +251,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#3a125d',
   },
-  subtitle: {
-    fontSize: SCREEN_WIDTH * 0.055,
-    fontWeight: '600',
-    color: '#3a125d',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  optionsContainer: {
-    marginBottom: 40,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderColor: '#3a125d',
-    borderWidth: 2,
-    borderRadius: 15,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginBottom: 15,
-  },
-  optionSelected: {
-    backgroundColor: '#3a125d',
-  },
-  iconWrapper: {
-    width: 30,
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  optionLabel: {
-    fontSize: SCREEN_WIDTH * 0.045,
-    fontWeight: '600',
-    color: '#3a125d',
-  },
-  payButton: {
-    backgroundColor: '#3B7CF5',
-    paddingVertical: 18,
-    borderRadius: 30,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  payButtonText: {
-    color: '#fff',
-    fontSize: SCREEN_WIDTH * 0.05,
-    fontWeight: '700',
-  },
+
+  payButton: { backgroundColor: '#3B7CF5', paddingVertical: 16, borderRadius: 30, alignItems: 'center' },
+  payButtonText: { color: '#fff', fontSize: SCREEN_WIDTH * 0.05, fontWeight: '700' },
 });

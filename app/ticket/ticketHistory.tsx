@@ -21,6 +21,7 @@ interface Booking {
   seatLabels: string[];
   totalPrice: number;
   paymentMethod: string;
+  paymentVerified: boolean;
   createdAt?: any;
 }
 
@@ -142,10 +143,18 @@ export default function TicketHistory() {
           <Text style={styles.noTicket}>You have no tickets booked.</Text>
         ) : (
           bookings.map((ticket) => (
-            <View key={ticket.id} style={styles.ticketCard}>
+            <View
+              key={ticket.id}
+              style={[
+                styles.ticketCard,
+                { borderLeftColor: ticket.paymentVerified ? '#28a745' : '#dc3545' },
+              ]}
+            >
               <View style={styles.row}>
                 <Text style={styles.label}>Bus:</Text>
-                <Text style={styles.value}>{ticket.busName || 'Unknown'} ({ticket.acType || 'Type Unknown'})</Text>
+                <Text style={styles.value}>
+                  {ticket.busName || 'Unknown'} ({ticket.acType || 'Type Unknown'})
+                </Text>
               </View>
               <View style={styles.row}>
                 <Text style={styles.label}>Seats:</Text>
@@ -165,6 +174,25 @@ export default function TicketHistory() {
                   <Text style={styles.value}>{formatFullDateTime(ticket.createdAt)}</Text>
                 </View>
               )}
+              <View style={[styles.paymentStatusContainer]}>
+                <Text style={styles.paymentStatusLabel}>Payment Verified:</Text>
+                <Text
+                  style={[
+                    styles.paymentStatusValue,
+                    { color: ticket.paymentVerified ? '#28a745' : '#dc3545' },
+                  ]}
+                >
+                  {ticket.paymentVerified ? 'Yes' : 'No'}
+                </Text>
+              </View>
+
+              {/* Print Button */}
+              <TouchableOpacity
+                style={styles.printButton}
+                onPress={() => router.push({ pathname: '/ticket/ticketPrint', params: { bookingId: ticket.id } })}
+              >
+                <Text style={styles.printButtonText}>Print</Text>
+              </TouchableOpacity>
             </View>
           ))
         )}
@@ -174,7 +202,7 @@ export default function TicketHistory() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#eceefc' },
+  safeArea: { flex: 1, backgroundColor: '#f0f2f8' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   header: {
@@ -186,26 +214,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     elevation: 4,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   backBtn: { padding: 4 },
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700', flex: 1, textAlign: 'center' },
 
   container: { paddingHorizontal: 20, paddingBottom: 50 },
+
   ticketCard: {
     backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
+    padding: 18,
+    borderRadius: 12,
     marginBottom: 15,
-    elevation: 3,
-    shadowColor: '#000000',
+    elevation: 4,
+    shadowColor: '#000',
     shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
     shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
+    borderLeftWidth: 5, // colored stripe
   },
-  row: { flexDirection: 'row', marginBottom: 6 },
+
+  row: { flexDirection: 'row', marginBottom: 8 },
   label: { width: 120, fontWeight: '600', color: '#3B7CF5' },
-  value: { flex: 1, color: '#544d4d' },
+  value: { flex: 1, color: '#544d4d', fontWeight: '500' },
+
+  paymentStatusContainer: {
+    flexDirection: 'row',
+    marginTop: 5,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  paymentStatusLabel: { fontWeight: '600', color: '#3B7CF5', marginRight: 8 },
+  paymentStatusValue: { fontWeight: '700' },
+
+  printButton: {
+    marginTop: 10,
+    backgroundColor: '#3B7CF5',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  printButtonText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 
   noTicket: {
     fontSize: 16,

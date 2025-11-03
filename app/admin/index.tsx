@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,20 +9,11 @@ export default function Dashboard() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const handleAllBus = () => {
-    router.push('/admin/allbus');
-  };
-
-  const handleAddBus = () => {
-    router.push('/admin/addbus');
-  };
-
-  const handleAllUser = () => {
-    router.push('/admin/allusers');
-  };
-  const handleComplain = () => {
-    router.push('/admin/complains');
-  };
+  const handleAllBus = () => router.push('/admin/allbus');
+  const handleAddBus = () => router.push('/admin/addbus');
+  const handleAllUser = () => router.push('/admin/allusers');
+  const handleComplain = () => router.push('/admin/complains');
+  const handleVerifyBooking = () => router.push('/admin/verifybooking'); // New button
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -59,6 +50,11 @@ export default function Dashboard() {
           <Text style={styles.buttonText}>All Complaint</Text>
         </TouchableOpacity>
 
+        {/* New Verify Booking Button */}
+        <TouchableOpacity style={styles.button} onPress={handleVerifyBooking}>
+          <Ionicons name="checkmark-done-outline" size={20} color="#3B7CF5" style={styles.icon} />
+          <Text style={styles.buttonText}>Verify Booking</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

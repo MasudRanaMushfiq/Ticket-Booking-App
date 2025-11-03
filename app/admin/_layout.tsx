@@ -10,6 +10,7 @@ export default function Layout() {
       <Stack.Screen name="allusers" options={{ headerShown: false }}/>
       <Stack.Screen name="complains" options={{ headerShown: false }}/>
       <Stack.Screen name="contacts" options={{ headerShown: false }}/>
+      <Stack.Screen name="verifybooking" options={{ headerShown: false }}/>
     </Stack>
   );
 }

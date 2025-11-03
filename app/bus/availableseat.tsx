@@ -32,7 +32,7 @@ interface Seat {
   label: string;
 }
 
-const LOCK_TIME = 10 * 1000; // 10 minutes
+const LOCK_TIME = 60 * 1000; // 1 minutes
 
 export default function AvailableSeatScreen() {
   const router = useRouter();
