@@ -13,7 +13,7 @@ export default function Dashboard() {
   const handleAddBus = () => router.push('/admin/addbus');
   const handleAllUser = () => router.push('/admin/allusers');
   const handleComplain = () => router.push('/admin/complains');
-  const handleVerifyBooking = () => router.push('/admin/verifybooking'); // New button
+  const handleVerifyBooking = () => router.push('/admin/verifybooking');
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -110,3 +110,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+

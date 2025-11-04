@@ -98,7 +98,8 @@ export default function PaymentScreen() {
 
       const busRef = doc(db, 'buses', busId);
       const busSnap = await getDoc(busRef);
-      const currentBookedSeats: string[] = busSnap.exists() && busSnap.data().bookedSeats ? busSnap.data().bookedSeats : [];
+      const currentBookedSeats: string[] =
+        busSnap.exists() && busSnap.data().bookedSeats ? busSnap.data().bookedSeats : [];
       await updateDoc(busRef, { bookedSeats: [...currentBookedSeats, ...seatLabels] });
 
       router.replace({
@@ -148,15 +149,27 @@ export default function PaymentScreen() {
           {paymentOptions.map(({ key, label, icon }) => {
             const selected = paymentMethod === key;
             return (
-              <TouchableOpacity
-                key={key}
-                style={[styles.option, selected && styles.optionSelected]}
-                onPress={() => setPaymentMethod(key)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.iconWrapper}>{icon}</View>
-                <Text style={[styles.optionLabel, selected && { color: '#fff' }]}>{label}</Text>
-              </TouchableOpacity>
+              <View key={key}>
+                <TouchableOpacity
+                  style={[styles.option, selected && styles.optionSelected]}
+                  onPress={() => setPaymentMethod(key)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.iconWrapper}>{icon}</View>
+                  <Text style={[styles.optionLabel, selected && { color: '#fff' }]}>{label}</Text>
+                </TouchableOpacity>
+
+                {/* Show Mobile Banking Info */}
+                {selected && key === 'mobile_banking' && (
+                  <View style={styles.mobileBankingInfo}>
+                    <Text style={styles.mobileBankingLabel}>Send money to:</Text>
+                    <Text style={styles.mobileBankingNumber}>📱 01780737227</Text>
+                    <Text style={styles.mobileBankingHint}>
+                      “Send Money” to this number and enter your Transaction ID below.
+                    </Text>
+                  </View>
+                )}
+              </View>
             );
           })}
         </View>
@@ -210,7 +223,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 20,
-    marginBottom: 15, // Reduced margin for compactness
+    marginBottom: 15,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 10,
@@ -223,7 +236,7 @@ const styles = StyleSheet.create({
 
   subtitle: { fontSize: SCREEN_WIDTH * 0.055, fontWeight: '600', color: '#3a125d', marginBottom: 10, textAlign: 'center' },
 
-  optionsContainer: { marginBottom: 15 }, // Reduced for compactness
+  optionsContainer: { marginBottom: 15 },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -239,7 +252,20 @@ const styles = StyleSheet.create({
   iconWrapper: { width: 30, alignItems: 'center', marginRight: 15 },
   optionLabel: { fontSize: SCREEN_WIDTH * 0.045, fontWeight: '600', color: '#3a125d' },
 
-  transactionContainer: { marginBottom: 15 }, // Reduced spacing
+  mobileBankingInfo: {
+    backgroundColor: '#fff',
+    padding: 15,
+    marginTop: 5,
+    marginBottom: 10,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3a125d',
+  },
+  mobileBankingLabel: { fontSize: 15, fontWeight: '600', color: '#3a125d' },
+  mobileBankingNumber: { fontSize: 16, fontWeight: '700', color: '#0c893a', marginTop: 5 },
+  mobileBankingHint: { fontSize: 13, color: '#555', marginTop: 5, fontStyle: 'italic' },
+
+  transactionContainer: { marginBottom: 15 },
   transactionInput: {
     backgroundColor: '#fff',
     paddingVertical: 14,
